@@ -1,0 +1,58 @@
+\documentclass{scrartcl}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[ngerman]{babel}
+\usepackage[shortlabels]{enumitem}
+
+\author{Patrick Eickhoff, Alexander Timmermann}
+\title{Labreport \#1}
+\setcounter{section}{1}
+
+\begin{document}
+    \maketitle
+    \section*{Aufgabe 1}
+    \label{sec:Aufgabe 1}
+
+    \subsection{Arbeiten mit der Shell}
+    \label{sub:Arbeiten mit der Shell}
+
+    \subsubsection{man ls}
+    \label{subs:man ls}
+        Mit dem Befehl \texttt{man ls} kann man sich die sog. \textit{man page}
+        des ls-Befehls ansehen. Dort werden alle Funktionen des Programmes erläutert
+        und ausführlich dokumentiert.
+
+    \subsubsection{ls \--\--help}
+    \label{subs:ls --help}
+        Mit dem Befehl \texttt{ls \--\--help} kann man sich eine Kurzreferenz des
+        ls-Befehls anzeigen lassen. Dort werden die wichtigsten Informationen
+        zusammengefasst und auf Hintergrundinfos verzichtet.
+
+    \subsubsection{script}
+    \label{subs:script}
+        Der Befehl \texttt{script} kann ein Transkript einer Shell-Session
+        speichern. Insbesondere für das Schreiben des Lab Reports ist dies
+        als Notiz sehr hilfreich.
+
+    \subsection{Benutzerkonten und -verwaltung}
+    \label{sub:Benutzerkonten und -verwaltung}
+
+    \begin{enumerate}[1.]
+        \item Mit dem Befehl \texttt{adduser labmate} legen wir den User
+              \textit{labmate} an. Mit einer interaktiven Abfrage wird das
+              Passwort des Users gesetzt.
+        \item Mit den Befehlen \texttt{groups} oder \texttt{id} lassen sich die
+              Gruppen des Users anzeigen. Zu Beginn befindet sich der User
+              lediglich in einer automatisch erstellten Gruppe, die nach dem
+              Username benannt ist.
+        \item Mit dem Befehl \texttt{addgroup labortests} legen wir die Gruppe
+              \textit{labortests} an.
+        \item Mit dem Befehl \texttt{usermod -a -G labortests labmate} fügen wir
+              den Benutzer \textit{labmate} zur Gruppe \textit{labortests} hinzu.
+        \item Damit der neue Benutzer den \textit{sudo}-Befehl benutzen darf,
+              muss er zu einer Gruppe hinzugefügt werden, die in der Datei
+              \textit{/etc/sudoers} konfiguriert ist. Auf dem Test-System ist
+              dies \textit{admin}. Dies bewerkstelligen wir mit dem Befehl
+              \texttt{usermod -a -G admin labmate}.
+    \end{enumerate}
+\end{document}
