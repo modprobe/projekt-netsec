@@ -55,4 +55,56 @@
               dies \textit{admin}. Dies bewerkstelligen wir mit dem Befehl
               \texttt{usermod -a -G admin labmate}.
     \end{enumerate}
+
+    \subsection{Datei- und Rechteverwaltung}
+    \label{sub:Datei- und Rechteverwaltung}
+
+    \begin{enumerate}[1.]
+      \item Mit dem Befehl \texttt{sudo -su labmate} öffnen wir eine neue \textit{shell}
+            als Nutzer \textit{labmate}.
+      \item Mit dem Befel \texttt{cd ~} wechseln wir in das home-Verzeichnis des
+            aktuellen Nutzers. Der Befehl \texttt{pwd} zeigt den aktuellen
+            Verzeichnispfad \textit{/home/labmate} an.
+      \item Mit dem Befehl \texttt{mkdir labreports} legen wir das Verzeichnis
+            \textit{/lapreports} an.
+      \item [4/5/6.] Nachdem wir die Datei \textit{bericht1.txt} mit den Befehlen
+            \texttt{touch bericht1.txt \&\& pico bericht1.txt} bearbeitet und
+            gespeichert haben, setzen wir die Gruppe dieser Datei mittels
+            \texttt{chgrp labortests bericht01.txt} auf \textit{labortests}.
+            Im Anschluss setzen wir mittels \texttt{chmod 0660} die Rechte für
+            Besitzer, sowie Teilnehmer der Gruppe auf \textit{rw} (read\&write).
+            Dieser Befehl setzt sich aus 4 Oktalzahlen zusammen: Das Sticky-Bit,
+            der Owner, die Group und Others. Die Oktalzahl für die Rechte setzt sich
+            dann aus den 3-Bit für rwx zusammen.
+      \item [8.] Nachdem wir mittels \texttt{chmod 0660 labortests} die Rechte für
+            dieses Verzeichnis verändert haben, versuchen wir mit dem Befehl
+            \texttt{cd labortests} in das Verzeichnis zu wechseln. Dies ist jedoch
+            nicht möglich, da wir keine execute-Rechte für das Verzeichnis besitzen.
+      \item [9.] Das selbe Verhalten beobachten wir, wenn wir versuchen in das Verzeichnis
+            \textit{/root} zu wechseln, da wir kein root-user sind.
+      \item [10.] Zuerst wechseln wir in das Verzeichnis \textit{/opt} und konfigurieren
+            mit folgenden Befehlen das neue Verzeichnis:
+            \texttt{mkdir test \&\& chown labmate test \&\& chgrp user labmate}.
+            Mit dem Befehl \texttt{chmod 0770 test} geben wir, wie oben beschrieben,
+            dem Besitzer, sowie der Gruppe von \textit{test} Lese-,Schreib- und
+            Ausführungsrechte (rwx).
+      \item [11.] Mit dem Befehl \texttt{cp /home/labmate/labreports/index.html /opt/test}
+            kopieren wir die Datei \textit{index.html} in das Verzeichnis \textit{/opt/test}.
+      \item [12.] Zuerst setzen wir die Gruppe der Datei \textit{index.html} mit dem Befehl
+            \texttt{chgrp user index.html} auf die Gruppe, der nur der Nutzer
+            \textit{user} angehört. Da \textit{labmate} bereits Besitzer der Datei
+            ist, können wir die Rechte einfach mit folgendem Befehl verteilen:
+            \texttt{chmod 0750 index.html} .
+      \item [14/15.] Mittels cat lässt sich als User nun die Datei \textit{index.html}
+            auslesen. Wenn wir jedoch versuchen die Datei mit \textit{nano} zu
+            bearbeiten und zu speichern wird uns der Zugriff verweigert, da wir
+            keine Schreibrechte als \textit{user} haben.
+      \item [16/17.] Der Owner der neuen, kopierten Datei \textit{userindex.html}
+            ist jetzt \textit{user}. Also lässt sich diese nun auch als \textit{user}
+            modifizieren, da die Zugriffsrechte der Ursprungsdatei beibehalten werden.
+      \item [18.] Die Datei \textit{index.html} lässt sich als \textit{user} nicht
+            löschen. \textit{user} muss entweder Besitzer der Datei sein oder
+            Lese- und Schreibzugriff auf das übergeordnete Verzeichnis besitzen.
+    \end{enumerate}
+
 \end{document}
