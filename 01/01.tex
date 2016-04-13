@@ -107,4 +107,50 @@
             Lese- und Schreibzugriff auf das übergeordnete Verzeichnis besitzen.
     \end{enumerate}
 
+    \subsection{Adnimistration und Aktualisierung}
+    \label{sub:Adnimistration und Aktualisierung}
+
+    \begin{enumerate} [1.]
+      \item Zuerst sollte man mit dem Befehl \texttt{sudo apt-get update} die
+            Indexdateien aller installierten Packages aktualisieren. Auf diese
+            Weise ist das System über neue und geupdatete Packages informiert.
+            Der Befehl \texttt{sudo apt-get upgrade} aktualisiert, dann alle
+            Packages auf die neuste Version. Hierbei werden jedoch keine Packages
+            gelöscht. Dies sollte per \texttt{sudo apt-get autoremove} vorgenommen
+            werden (siehe \texttt{man apt-get}).
+      \item Das Programm \textit{cowsay} gibt mittels \texttt{cowsay [words]} eine
+            Kuh mit Sprechblase und den angegebenen Wörtern auf der Konsole zurück.
+    \end{enumerate}
+
+    \subsection{Prozesse und Prozessverwaltung}
+    \label{sub:Prozesse und Prozessverwaltung}
+
+    \begin{enumerate} [1.]
+      \item \texttt{ps} gibt eine Momentaufnahme der per Optionen spezifizierten Prozesse
+            auf der Konsole aus. \texttt{top} hingegen gibt eine regelmäßig
+            aktualisierende Überischt über alle Prozesse, sowie wie weitere
+            Informationen über CPU-Auslastung, Speicherbedarf, etc., auf der Konsole
+            aus.
+      \item [3.] Beim Ausführen von \texttt{cat /dev/urandom} ist in top der Prozess
+            \textit{cat} deutlich zu sehen, da dieser viel Speicher verbraucht.
+      \item [4.] Der Prozess \textit{cat} lässt sich nicht als \textit{user} beenden,
+            da der Prozess von \textit{labmate} gestartet wurde. Wir benötigen
+            Super- oder Rootuserrechte um den Prozess mit \texttt{kill [Prozess-ID]}
+            beenden zu können.
+      \item [5.] Das System lässt sich nur als sich nur als Superuser neu starten.
+            Deshalb benötigen wir den Befehl \texttt{sudo reboot}, um das System als
+            \textit{labmate} neuzustarten.
+      \item [6.] Mit der Software \texttt{crontab} lassen sich sogenannte \textit{cronjobs}
+            also Systemaufgaben anlegen. \textit{cronjobs} bestehen aus einer
+            Zeitangabe und den Kommandos, die ausgeführt werden sollen.
+            Die Zeitangabe gliedert sich hierbei in Minuten, Stunden, Tag des Monats,
+            Monat und Tag der Woche auf. Die Liste aller Cronjobs für einen Nutzer
+            lässt sich mittel \texttt{crontab -e} editieren. Um alle 5 Minuten
+            einen Zeitstempel an die Datei \texttt{/home/labmate/zeitstempel.txt}
+            anzufügen, fügen wir folgenden Befehl zur Liste aller Cronjobs hinzu:
+            \texttt{*/5 * * * * date>>/home/labmate/zeitstempel.txt}.
+            \texttt{*/5} steht für alle 5 Minuten und der Befehl
+            \texttt{date>>/home/labmate/zeitstempel.txt} fügt den aktuellen
+            Zeitstempel an die Datei an.
+    \end{enumerate}
 \end{document}
