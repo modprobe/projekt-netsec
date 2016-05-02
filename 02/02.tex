@@ -1,0 +1,150 @@
+\documentclass{scrartcl}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[ngerman]{babel}
+\usepackage[shortlabels]{enumitem}
+\usepackage{listings}
+
+\author{Patrick Eickhoff, Alexander Timmermann}
+\title{Labreport \#2}
+\date{}
+\setcounter{section}{1}
+
+\begin{document}
+    \maketitle
+    \section*{Aufgabe 1}
+    \label{sec:Aufgabe 1}
+
+      \subsection{Zugriff auf \textit{/etc/passwd} und \textit{/etc/shadow}}
+      \label{sub:Zugriff auf /etc/passwd und /etc/shadow}
+
+      \begin{enumerate}
+        \item[2.] Das Booten des grml-ISO gestaltete sich schwieriger als
+                  erwartet. Da das Boot-Menü nur in einem sehr kurzen
+                  Zeitfenster zu aktivieren ist, mussten wir in der
+                  \textit{.vmx}-Datei von VMWare die Zeile
+                  \texttt{bios.forceSetupOnce = True} hinzufügen.
+                  Auf diese Weise haben wir einmalig das Öffnen des Bios beim
+                  Bootvorgang erzwungen.
+        \item[5.] In der Datei \textit{passwd} finden wir Einträge, wie z.B.
+                  <Beispiel>. Über die Manualpage (\texttt{man 5 passwd})
+                  erfahren wir, das alle Einträge folgende Form besitzen:\\\\
+                  \texttt{<login name>:\\
+                  <optional encrypted password>:\\
+                  <numerical user ID>:\\
+                  <numerical group ID>:\\
+                  <user name or comment field>:<user home directory>\\
+                  {[} : <optional user command interpreter> ] } \\\\
+                  Wenn im Passwort Feld ein \textbf{x} steht, finden wir das
+                  zugehörige Passwort verschlüsselt in der
+                  \textit{shadow}-Datei.
+                  Das Format dieser Datei können wir ebenfalls über
+                  \texttt{man 5 shadow} ermitteln.  In dieser Datei sind nun
+                  tatsächlich die Passwörter der Nutzer angegeben.
+          \item[6.] Der einzige Nutzer, der in Mitglied der
+                    \textit{admin}-Gruppe ist, heißt georg (admin : georg).
+      \end{enumerate}
+
+      \subsection{Auslesen von Kennwörtern}
+      \label{sub:Auslesen von Kennwörtern}
+
+      \begin{enumerate}
+        \item Ein Passwort zu \textit{hashen} bedeutet, das Passwort mittels
+              einer \textit{Hash-Funktion} zu versclüsseln. Eine
+              \textit{Hash-Funktion} hat die Eigenschaften, das sie eine
+              Einwegfunktion ist, und immer eine Ausgabe fixer Länge erzeugt.
+              Zudem sollte sie auch kollisionsfrei sein. Da eine
+              \textit{Hash-Funktion} bei gleicher Eingabe immer den gleichen
+              \textit{Hash} ausgibt, ist es möglich Anhand einer großen
+              Datenbank von \textit{Hashes} die Eingabe zu ermitteln. Um dies
+              zu verhindern, werden die Passwörter zusätzlich noch
+              \textit{gesaltet}. Dies bedeutet nichts anderes, als das ein
+              ein zusätzliches Wort vor oder hinter dem Passwort angehängt
+              wird, bevor es \textit{gehasht} wird. Auf diese Weise werden
+              für jeden \textit{Salt} unterschiedliche \textit{Hashes} erzeugt.
+        \item[4.] Mittels \texttt{sudo john -mode:incremental -users:webadmin
+                  -format:crypt shadow} versuchen wir das Passwort des Nutzers
+                  \textit{webadmin} per Bruteforce zu entschlüsseln.
+                  Nach 5 Minuten brechen wir den Versuch erfolglos ab.
+                  Vermutlich ist das Passwort so lang, dass ein Bruteforce-
+                  Angriff von enormer Dauer wäre.
+        \item[5.] Nachdem wir die Wörterbuch-Dateien mittels \\
+                  \texttt{wget http://download.openwall.net/pub/wordlists/
+                  all.gz} \\ heruntergeladen und über texttt{gunzip} entpackt
+                  haben, können wir unseren Angriff beginnen. Mit dem Befehl: \\
+                  \texttt{sudo john -mode:wordlist:/root/all -users:webadmin
+                  -format:crypt shadow} \\ starten wir den Wörterbuchangriff und
+                  finden heraus, das das Passwort des Nutzers \textit{webadmin}
+                  \textbf{mockingbibrd} lautet.
+      \end{enumerate}
+
+      \subsection{Setzen von neuen Passwörtern}
+      \label{sub:Setzen von neuen Passwörtern}
+
+      \begin{enumerate}
+        \item Vermutlich lässt sich das Passwort des Nutzers \textit{georg}
+              nicht einfach mit \textit{John the Ripper} ermitteln, da es
+              etweder gesaltet ist, zu lang oder einfach nicht in unserer
+              Wörterbuch-Datei enthalten ist.
+        \item Mittels \texttt{mount -w dev/sda1} mounten wir das Image erneut
+              mit Schreibzugriff.
+        \item Über den Befel \texttt{chroot . /bin/bash} öffnen wir im
+              aktuellen Verzeichnis eine interaktive \textit{bash-Shell}.
+        \item Mit \texttt{passwd georg} setzen wir nun das neue Passwort
+              \textit{passwort123}.
+      \end{enumerate}
+
+    \section{Sichere Speicherung von Kennwörtern}
+    \label{sec:Sichere Speicherung von Kennwörtern}
+
+      \subsection{Angriffe mit Hashdatenbanken und Rainbow-Tables}
+      \label{sub:Angriffe mit Hashdatenbanken und Rainbow-Tables}
+
+      \begin{enumerate}
+        \item Durch den Befehl \texttt{./rcracki} erfahren wir, dass
+              \textit{rcrack} mit einem Pfad zu den Rainbowtables, sowie der
+              Datei, die entschlüsselt werden soll, ausgeführt wird. Mittels
+              Optionen kann angegeben werden, um welche Art von Datei es sich
+              handelt.\\\\
+              \texttt{./rcrack rainbow\_table\_path [-h hash | -l hashlist |
+              -f pwdumpfile]} \\\\
+              Nun starten wir unseren Angriff mit folgendem Befehl: \\\\
+              \texttt{./rcrack ../md5\_mixalpha-numeric-space\_1-7\_*/*.rti -l
+              $\sim$/geheime\_kennwoerter.txt} \\\\
+              Wir erhalten folgende 5 Passwörter: ente,ball,borkeni,ulardi,
+              avanti. 2 Hashes konnten nicht entschlüsselt werden.
+}
+        \item Vermutlich wurden die beiden Passwörter, die nicht entschlüsselt
+              werden konnten, gesaltet. Die Idee Programm zu schreiben, das
+              MD5-Hashes für alle alphanumerischen Passwörter bis zur Länge 7
+              berechnet und abspeichert, ist jedoch auch keine passable Lösung.
+              Alleine das Berechnen von $$\sum_{i=0}^{7}{62^i} = 3579345993195$$
+              Kennwörtern würde enorme Rechenleistung benötigen. Da MD5 immer
+              Hashes der Länge 16-Byte generiert würde die Speicherung dieser
+              $$3579345993195 * 16B = 5,726953589×10^{13} B
+                = 53336 GB
+                = 52 TB$$
+              an Festplattenspeicher in Anspruch nehmen. Die Rainbowtables aus
+              der vorherigen Aufgabe haben hingegen nur ca. 12GB benötigt.
+      \end{enumerate}
+
+      \subsection{Eigener Passwort-Cracker}
+      \label{sub:Eigener Passwort-Cracker}
+
+        Um das Passwort zu entschlüsseln haben wir uns entschieden einfach
+        einen Bruteforce-Angriff durchzuführen. Hierzu lassen wir uns einfach
+        mittels for-Schleife und einer Funktion zum erzeugen des karthesischen
+        Produkts über einem Alphabet mit einer gegebenen Länge i alle
+        alphanumerischen, klein geschriebenen Kennwörter generieren. Jedes
+        Kennwort wird dann gesaltet und mittels MD5-Funktion gehasht.
+        Die Ausgabe der Funktion vergleichen wir dann mit dem gegebenen Hash.
+        Nach einiger Iterationen finden wir tatsächlich heraus, dass das
+        Passwort \textbf{s1v3s} lautet. (Für Code siehe \textit{pwcrack.py})
+
+      \subsection{Eigene Kennwort-Speicherfunktion in Java}
+      \label{sub:Eigene Kennwort-Speicherfunktion in Java}
+
+
+
+
+\end{document}
