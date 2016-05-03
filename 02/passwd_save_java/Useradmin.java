@@ -1,7 +1,6 @@
 package passwd_save_java;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -30,7 +29,7 @@ public class Useradmin implements Useradministration{
 
 	@Override
 	public void addUser(String username, char[] password) {
-		
+
 		if (findUserLine(username) != null) {
 			System.out.println("User already exists");
 		}
@@ -43,11 +42,7 @@ public class Useradmin implements Useradministration{
 				MessageDigest digest = MessageDigest.getInstance("SHA-512");
 				digest.update(salt);
 
-				try {
-					digest.update(new String(password).getBytes("UTF-8"));
-				} catch (UnsupportedEncodingException e) {
-					System.err.println("Unsupported Encoding UTF-8");
-				}
+				digest.update(charArrayToBytesUTFCustom(password)); 
 
 				byte[] output = digest.digest();
 
@@ -78,14 +73,14 @@ public class Useradmin implements Useradministration{
 
 	@Override
 	public boolean checkUser(String username, char[] password) {
-		
+
 		List<String> userline = findUserLine(username);
 		if (userline != null) {
 			byte[] salt = hexStringToByteArray(userline.get(0));
 			try {
 				MessageDigest digest = MessageDigest.getInstance("SHA-512");
 				digest.update(salt);
-				digest.update(new String(password).getBytes("UTF-8"));
+				digest.update(charArrayToBytesUTFCustom(password));
 				byte[] output = digest.digest();
 
 				for (int i = 0; i < 1000; i++) 
@@ -97,13 +92,11 @@ public class Useradmin implements Useradministration{
 			catch (NoSuchAlgorithmException e){
 				System.err.println("SHA-512 not available");
 			}
-			catch (UnsupportedEncodingException e){
-				System.err.println("Unsupported Encoding UTF-8");
-			}
 		}
 		return false;
 	}
 
+	
 	private void matchCommand(String input){
 		Pattern adduser = Pattern.compile("addUser (\\w{1,10})");
 		Pattern checkuser = Pattern.compile("checkUser (\\w{1,10})");
@@ -132,7 +125,7 @@ public class Useradmin implements Useradministration{
 	}
 
 	private List<String> findUserLine(String username){
-		
+
 		Pattern userline = Pattern.compile(username + ":(\\w{64,64}):(\\w{128,128})");
 		Path file = Paths.get("password.txt");
 		try {
@@ -150,7 +143,7 @@ public class Useradmin implements Useradministration{
 	}
 
 	private String bytesToHex(byte[] bytes) {
-		
+
 		final char[] hexArray = "0123456789abcdef".toCharArray();
 		char[] hexChars = new char[bytes.length * 2];
 		for ( int j = 0; j < bytes.length; j++ ) {
@@ -162,7 +155,7 @@ public class Useradmin implements Useradministration{
 	}
 
 	public static byte[] hexStringToByteArray(String s) {
-		
+
 		int len = s.length();
 		byte[] data = new byte[len / 2];
 		for (int i = 0; i < len; i += 2) {
@@ -171,4 +164,17 @@ public class Useradmin implements Useradministration{
 		}
 		return data;
 	}
+
+	public static byte[] charArrayToBytesUTFCustom(char[] str) {
+		char[] buffer = str;
+		byte[] b = new byte[buffer.length << 1];
+		for(int i = 0; i < buffer.length; i++) {
+			int bpos = i << 1;
+			b[bpos] = (byte) ((buffer[i]&0xFF00)>>8);
+			b[bpos + 1] = (byte) (buffer[i]&0x00FF);
+		}
+		return b;
+	}
 }
+
+
