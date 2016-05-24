@@ -1,0 +1,111 @@
+\documentclass{scrartcl}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[ngerman]{babel}
+\usepackage[shortlabels]{enumitem}
+\usepackage{listings}
+
+\author{Patrick Eickhoff, Alexander Timmermann}
+\title{Labreport \#3}
+\date{}
+\setcounter{section}{0}
+
+\begin{document}
+    \maketitle
+    \section{HTTP}
+    \label{sec:HTTP}
+
+      \subsection{}
+      \label{sub:1.1}
+        Mit dem Befehl \texttt{telnet www.uni-hamburg.de 80} öffnen wir eine
+        Verbindung zu der angegeben Adresse über Port 80 (Http Port).
+        Mit der offenen Verbindung erwartet der Host nun unsere Request.
+        Nach der üblichen Form für HTTP-Anfragen, fragen wir die
+        \textit{home.html} an:
+        \begin{lstlisting}
+          GET /de/inst/ab/svs/home.html HTTP/1.1
+          Host:www.inf.uni-hamburg.de
+        \end{lstlisting}
+        Da wir eine HTTP/1.1 Anfrage stellen, müssen wir den Host angegeben,
+        da HTTP/1.1 multiple Domains erlaubt.\\\\
+        Als Antwort erhalten wir jedoch, dass die gesuchte Seite verschoben
+        wurde und nun unter
+        \textit{https://www.inf.uni-hamburg.de/de/inst/ab/svs/home.html}
+        zu finden ist. Da \texttt{telnet} jedoch keine SSL-Verbindungen
+        unterstützt, müssen wir per OpenSSL die HTML anfragen:
+        \texttt{openssl s\_client -connect www.inf.uni-hamburg.de:443} (Port 443
+        für ssl)
+        \begin{lstlisting}
+          GET /de/isnt/ab/svs/home.html
+          Host: www.inf.uni-hamburg.de
+        \end{lstlisting}
+        Im Kopf der HTML können wir sehen, dass
+        \textit{/assets/application-11e3b49e605ff8ba1f01d275bd36850edfdfc1\\
+                fbbb8c22e55fae1baf643a00d0.css}
+        der Stylesheet ist, den wir suchen. Da SSL jedoch eine sichere Verbindung
+        ist, haben wir kaum Zeit unsere nächste Anfrage zu stellen:
+        \begin{lstlisting}
+          GET /assets/application-11e3b49e605ff8ba1f01d275bd36850edfdfc1fbb
+          b8c22e55fae1baf643a00d0.css
+          Host:www.inf.uni-hamburg.de
+        \end{lstlisting}
+  \section{SMTP(Mail-Spoofing)}
+  \label{sec:SMTP(Mail-Spoofing)}
+    \subsection{}
+    \label{sub:2.1}
+      Mittels \texttt{netcat mailhost.informatik.uni-hamburg.de 25} verbinden
+      wir uns mit dem SMTP-Server des Informatikums.
+      \begin{lstlisting}
+        HELO mailhost.informatik.uni-hamburg.de
+        MAIL FROM:<123Mustermann@informatik.uni-hamburg.de>
+        RCPT TO:<123opfer@informatik.uni-hamburg.de>
+        DATA
+        From: <123Mustermann@informatik.uni-hamburg.de>
+        To: <123opfer@informatik.uni-hamburg.de>
+        Date: Mon, 10 Apr 2016 10:00:00 -0400
+        Subject: Prank
+
+        Its just a prank.
+
+        .
+
+        QUIT
+      \end{lstlisting}
+      Wenn man nun den Quelltext unserer Fake-Mail und einer normalen Mail
+      vergleicht sieht man einige Unterschiede:\\
+      Zum einem ist die Fake-Mail nicht im MIME-Format, wie normalerweise
+      üblich. Sehr gut lässt sich auch erkennen, dass Nachrichten von
+      authentifizierten Nutzern des RRZ auch als solche im Quelltext sichtbar
+      sind: \texttt{(Authenticated sender: 123Mustermann)}. Dies sind nur
+      einige der Unterschiede zwischen einer echten und unserer gefälschten
+      Mail.
+
+  \section{DNS-Spoofing}
+  \label{sec:DNS-Spoofing}
+    \subsection{}
+    \label{sub:3.1}
+      Nach einiger Interaktion mit dem Lizensserver, fällt uns auf, dass keine
+      Authentifikation zwischen Klient und Server gefordert wird. Ausserdem ist
+      die Bestätigung eienr Lizenz vom Server zum Klienten nur der String
+      \texttt{SERIAL\_VALID=1}. Dies lässt sich leicht fälschen, wenn wir
+      einfach unseren eigenen Server mittels DNS-Spoofing als Lizenzserver
+      ausgeben.
+    \subsection{}
+    \label{sub:3.2}
+      Um den Lizenclient auszutricksen, müssen wir zuerst sicherstellen, dass
+      er sich mit unserem eigenem Server anstatt dem Lizenzserver verbindet.
+      Obwohl die \textit{LicenseClient.class} nicht einfach auslesbar ist,
+      können wir mittels \texttt{strings LicenseClient.class} herausfinden,
+      dass der Klient immer mit der selben Hostadresse \textit{licenseserver}
+      verbindet.
+      Nun müssen wir nur noch in der \textit{hosts}-Datei folgenden Eintrag
+      hinzufügen: \textit{127.0.1.2 licenseserver}, wobei 127.0.1.2 die
+      IP-Adresse ist, auf der wir unseren eigenen Server laufen lassen.\\\\
+      Unseren Server haben wir in \textit{Ruby} geschrieben\\
+      (Source:http://www.tutorialspoint.com/ruby/ruby\_socket\_programming.htm,
+      sh. Appendix A). Wenn der Server angesprochen wird, tut dieser nichts
+      anderes, als irgendeine Eingabe vom Klienten zu nehmen und mit
+      \texttt{SERIAL\_VALID=1} zu antworten. 
+
+
+\end{document}
