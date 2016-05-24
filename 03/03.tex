@@ -105,7 +105,38 @@
       (Source:http://www.tutorialspoint.com/ruby/ruby\_socket\_programming.htm,
       sh. Appendix A). Wenn der Server angesprochen wird, tut dieser nichts
       anderes, als irgendeine Eingabe vom Klienten zu nehmen und mit
-      \texttt{SERIAL\_VALID=1} zu antworten. 
+      \texttt{SERIAL\_VALID=1} zu antworten.
+    \subsection{}
+    \label{sub:3.3}
+
+  \section{License-Server(bruteforce-Angriff)}
+  \label{sec:License-Server(bruteforce-Angriff)}
+    \subsection{}
+    \label{sub:4.1}
+      Den Bruteforce-Angriff haben wir als Python-Skript geschrieben (sh.
+      Appendix B) basierend auf dem Passwort-Bruteforce. Als problematisch
+      erwies sich jedoch, dass der LicenseServer bei zu vielen Anfragen bzw.
+      Versuchen die Verbindung geschlossen und einen Neuaufbau für ein
+      gewisses Zeitfenster abgelehnt hat. Aus diesem Grund haben wir sobald
+      keine Antwort mehr vom Server zurückkommt, eine Wartezeit von 10s
+      eingeführt, bis wir wieder eine Verbindung zum Server aufbauen. Dies
+      funktioniert zwar, jedoch treibt es auch die Berechnungszeit enorm in die
+      Höhe.
+    \subsection{}
+    \label{sub:4.2}
+      Eine Möglichkeit für den Betreiber sich gegen Bruteforceangriffe zu
+      schützen, ist einen größeren Zeitabstand zwischen Anfragen zu fordern.
+      Auf diese Weise würde ein Bruteforce-Angriff einen enormen Zeitaufwand
+      haben. Eine weitere Möglichkeit ist, bei hoher Anzahl subsequenter
+      Anfragen von der selben IP-Adresse, diese zu sperren (Blacklisting).
+    \subsection{}
+    \label{sub:4.3}
+
+  \section{Iplementieren eines TCP-Chats}
+  \label{sec:Iplementieren eines TCP-Chats}
+  
+
+
 
 
 \end{document}
