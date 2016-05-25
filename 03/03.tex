@@ -5,6 +5,7 @@
 \usepackage[shortlabels]{enumitem}
 \usepackage{listings}
 \usepackage{color}
+\usepackage{amssymb}
 
 \usepackage[title]{appendix}
 \definecolor{dkgreen}{rgb}{0,0.6,0}
@@ -25,7 +26,7 @@
   stringstyle=\color{mauve},
   breaklines=true,
   breakatwhitespace=true,
-  tabsize=3
+  tabsize=3,
 }
 
 \author{Patrick Eickhoff, Alexander Timmermann}
@@ -46,8 +47,8 @@
         Nach der üblichen Form für HTTP-Anfragen, fragen wir die
         \textit{home.html} an:
         \begin{lstlisting}
-          GET /de/inst/ab/svs/home.html HTTP/1.1
-          Host:www.inf.uni-hamburg.de
+GET /de/inst/ab/svs/home.html HTTP/1.1
+Host: www.inf.uni-hamburg.de
         \end{lstlisting}
         Da wir eine HTTP/1.1 Anfrage stellen, müssen wir den Host angegeben,
         da HTTP/1.1 multiple Domains erlaubt.\\\\
@@ -59,46 +60,45 @@
         \texttt{openssl s\_client -connect www.inf.uni-hamburg.de:443} (Port 443
         für ssl)
         \begin{lstlisting}
-          GET /de/isnt/ab/svs/home.html
-          Host: www.inf.uni-hamburg.de
+ GET /de/inst/ab/svs/home.html
+ Host: www.inf.uni-hamburg.de
         \end{lstlisting}
         Im Kopf der HTML können wir sehen, dass
-        \textit{/assets/application-11e3b49e605ff8ba1f01d275bd36850edfdfc1\\
-                fbbb8c22e55fae1baf643a00d0.css}
+        \textit{/assets/application-11e3b49e605ff8ba1f01d2\\
+                75bd36850edfdfc1fbbb8c22e55fae1baf643a00d0.css}
         der Stylesheet ist, den wir suchen. Da SSL jedoch eine sichere Verbindung
         ist, haben wir kaum Zeit unsere nächste Anfrage zu stellen:
         \begin{lstlisting}
-          GET /assets/application-11e3b49e605ff8ba1f01d275bd36850edfdfc1fbb
-          b8c22e55fae1baf643a00d0.css
-          Host:www.inf.uni-hamburg.de
+ GET /assets/application-11e3b49e605ff8ba1f01d275bd36850edfdfc1fbb
+ b8c22e55fae1baf643a00d0.css
+ Host: www.inf.uni-hamburg.de
         \end{lstlisting}
-  \section{SMTP(Mail-Spoofing)}
-  \label{sec:SMTP(Mail-Spoofing)}
+  \section{SMTP (Mail-Spoofing)}
+  \label{sec:SMTP (Mail-Spoofing)}
     \subsection{}
     \label{sub:2.1}
       Mittels \texttt{netcat mailhost.informatik.uni-hamburg.de 25} verbinden
       wir uns mit dem SMTP-Server des Informatikums.
       \begin{lstlisting}
-        HELO mailhost.informatik.uni-hamburg.de
-        MAIL FROM:<123Mustermann@informatik.uni-hamburg.de>
-        RCPT TO:<123opfer@informatik.uni-hamburg.de>
-        DATA
-        From: <123Mustermann@informatik.uni-hamburg.de>
-        To: <123opfer@informatik.uni-hamburg.de>
-        Date: Mon, 10 Apr 2016 10:00:00 -0400
-        Subject: Prank
+EHLO fake.doma.in
+MAIL FROM: <definitelynotfake@informatik.uni-hamburg.de>
+RCPT TO: <0pfer@informatik.uni-hamburg.de>
+DATA
+From: Serious Guy <definitelynotfake@informatik.uni-hamburg.de>
+To: P. Fer <0pfer@informatik.uni-hamburg.de>
+Date: Mon, 10 Apr 2016 10:00:00 -0400
+Subject: PLEASE ENTER PIN NOW
 
-        Its just a prank.
-
-        .
-
-        QUIT
+Ein sprechender Elch will meine Kreditkartennummer! Das find ich fair.
+https://www.youtube.com/watch?v=IfXMN3VhikA
+.
+QUIT
       \end{lstlisting}
       Wenn man nun den Quelltext unserer Fake-Mail und einer normalen Mail
       vergleicht sieht man einige Unterschiede:\\
       Zum einem ist die Fake-Mail nicht im MIME-Format, wie normalerweise
       üblich. Sehr gut lässt sich auch erkennen, dass Nachrichten von
-      authentifizierten Usern des RRZ auch als solche im Quelltext sichtbar
+      authentifizierten Usern des RZ auch als solche im Quelltext sichtbar
       sind: \texttt{(Authenticated sender: 123Mustermann)}. Dies sind nur
       einige der Unterschiede zwischen einer echten und unserer gefälschten
       Mail.
@@ -107,7 +107,7 @@
   \label{sec:DNS-Spoofing}
     \subsection{}
     \label{sub:3.1}
-      Nach einiger Interaktion mit dem Lizensserver, fällt uns auf, dass keine
+      Nach einiger Interaktion mit dem Lizenzserver, fällt uns auf, dass keine
       Authentifikation zwischen Klient und Server gefordert wird. Ausserdem ist
       die Bestätigung eienr Lizenz vom Server zum Klienten nur der String
       \texttt{SERIAL\_VALID=1}. Dies lässt sich leicht fälschen, wenn wir
@@ -135,7 +135,7 @@
       Möglichkkeiten: Zum einem können so simple DNS-Angriffe verhindert werden,
       wenn statt der \textit{/etc/hosts} Datei direkt eine DNS-Query verwendet
       wird. Dies ist aber auch nur begrenzter Schutz, da auch die DNS-Resolver
-      mit sog. \textit{cache-posioning} manipuiliert werden können. Einen
+      mit sog. \textit{cache poisoning} manipuiliert werden können. Einen
       besseren Schutz bieten Methoden wie: \\
       \begin{enumerate}
         \item Zufällig Groß- und Kleinbuchstaben verwenden, da diese nicht im
@@ -169,6 +169,18 @@
       Anfragen von der selben IP-Adresse, diese zu sperren (Blacklisting).
     \subsection{}
     \label{sub:4.3}
+      Seriennummern werden nach folgender Formel erstellt:
+      \[
+        s = (n \cdot 3133700)~mod~10^8, n \in \mathbb{N}
+      \]
+      Zur Überprüfung reicht es folglich beim Server, die empfangene Seriennummer
+      auf eine restfreie Division durch $3133700$ und die Länge von 8 Zeichen
+      zu prüfen, also z.B.:
+      \begin{lstlisting}[language=ruby]
+def validate_serial(input)
+    return (input.to_i % 3133700 == 0) && (input.length == 8)
+end
+      \end{lstlisting}
 
   \section{Iplementieren eines TCP-Chats}
   \label{sec:Iplementieren eines TCP-Chats}
@@ -205,13 +217,13 @@
       Methode, wird dann an alle registrierten Threads der \texttt{print}-Befehl
       weitergereicht.
       \begin{lstlisting}[language=java]
-        public void notify(String message, int ID, String User) {
-		for (ClientThread t : connections) {
-			if (t.ID != ID) {
-				t.print(User + ":" + message);
-			}
+public void notify(String message, int ID, String User) {
+	for (ClientThread t : connections) {
+		if (t.ID != ID) {
+			t.print(User + ":" + message);
 		}
 	}
+}
       \end{lstlisting}
       Ein Thread, der seine Client-Verbindung schließt, wird aus der Liste
       \textit{connections} entfernt.
@@ -229,31 +241,31 @@
       das Terminierungszeichen \texttt{\\r} lesen. Diese Liste lässt sich dann
       in ein char-Array umwandeln.
       \begin{lstlisting}[language=java]
-        BufferedReader in = null;
-		try {
-			PrintWriter out = new PrintWriter(
-                            client.getOutputStream(), true);
-			in = new BufferedReader(new InputStreamReader(
-					client.getInputStream()));
-			out.println("Username: ");
-			String username = in.readLine();
-			out.println("Password:");
-			List<Character> l = new ArrayList<Character>();
-			do {
-				char c = (char) in.read();
-				if (c == '\r') {
-					break;
-				}
-				l.add(c);
-			} while (true);
-			char[] password = new char[l.size()];
-			int i = 0;
-			for (Character c : l) {
-				password[i] = c.charValue();
-				i++;
-			}
-			l = null;
-      \end{lstlisting}
+BufferedReader in = null;
+try {
+	PrintWriter out = new PrintWriter(
+                    client.getOutputStream(), true);
+	in = new BufferedReader(new InputStreamReader(
+			client.getInputStream()));
+	out.println("Username: ");
+	String username = in.readLine();
+	out.println("Password:");
+	List<Character> l = new ArrayList<Character>();
+	do {
+		char c = (char) in.read();
+		if (c == '\r') {
+			break;
+		}
+		l.add(c);
+	} while (true);
+	char[] password = new char[l.size()];
+	int i = 0;
+	for (Character c : l) {
+		password[i] = c.charValue();
+		i++;
+	}
+	l = null;
+ \end{lstlisting}
       Der Server prüft intern, ob die User-Passwort-Kombination gültig ist.
       Ist sie es nicht, wird sofort die Verbindung geschlossen. Wenn der User
       sich erfolgreich authentifiziert, trägt der Server den User in die Liste
