@@ -108,9 +108,26 @@
       \texttt{SERIAL\_VALID=1} zu antworten.
     \subsection{}
     \label{sub:3.3}
+      Um sich vor DNS-Spoofing zu schützen hat der Betreiber mehrere
+      Möglichkkeiten: Zum einem können so simple DNS-Angriffe verhindert werden,
+      wenn statt der \textit{/etc/hosts} Datei direkt eine DNS-Query verwendet
+      wird. Dies ist aber auch nur begrenzter Schutz, da auch die DNS-Resolver
+      mit sog. \textit{cache-posioning} manipuiliert werden können. Einen
+      besseren Schutz bieten Methoden wie: \\
+      \begin{enumerate}
+        \item Zufällig Groß- und Kleinbuchstaben verwenden, da diese nicht im
+              Cache des Resolvers stehen, aber von Name-Servern beim auflösen
+              der IP-Adresse ignoriert werden.
+        \item Die Query-ID zufällig setzen, sodass Queries nicht gezielt
+              manipuliert werden können.
+      \end{enumerate}
+      Am einfachsten wäre es vermutlich innerhalb der LicenseClient-Datei den
+      Namen mit Groß- und Kleinschreibung zu randomisieren.\\
+      Für weitere Informationen siehe Quelle:
+      \textit{http://www.esecurityplanet.com/network-security/how-to-prevent-dns-attacks.html}
 
-  \section{License-Server(bruteforce-Angriff)}
-  \label{sec:License-Server(bruteforce-Angriff)}
+  \section{License-Server(Bruteforce-Angriff)}
+  \label{sec:License-Server(Bruteforce-Angriff)}
     \subsection{}
     \label{sub:4.1}
       Den Bruteforce-Angriff haben wir als Python-Skript geschrieben (sh.
