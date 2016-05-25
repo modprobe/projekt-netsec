@@ -1,3 +1,6 @@
+// Original Source http://stackoverflow.com/questions/10556829/sending-and-receiving-udp-packets-using-java
+// Modified for own use
+
 import java.io.IOException;
 import java.net.*;
 

@@ -75,7 +75,7 @@
       vergleicht sieht man einige Unterschiede:\\
       Zum einem ist die Fake-Mail nicht im MIME-Format, wie normalerweise
       üblich. Sehr gut lässt sich auch erkennen, dass Nachrichten von
-      authentifizierten Nutzern des RRZ auch als solche im Quelltext sichtbar
+      authentifizierten Usern des RRZ auch als solche im Quelltext sichtbar
       sind: \texttt{(Authenticated sender: 123Mustermann)}. Dies sind nur
       einige der Unterschiede zwischen einer echten und unserer gefälschten
       Mail.
@@ -161,7 +161,83 @@
       \textit{https://code.google.com/archive/p/example-of-servlet/}. Die
       2. URL wurde anders übermittelt, da jedoch der Project-Hosting-Service
       von Google Anfang 2016 eingestellt wurde, findet man dies nun im Archiv.
-
+    \subsection{}
+    \label{sub:5.2}
+      Nach Zusammenfassen und etwas umschreiben des Tutorials von Oracle, läuft
+      unser Server dann über \textit{localhost} auf dem Port 4444. Wenn wir
+      diesen jetzt über \texttt{telnet localhost 4444} ansprechen, können
+      wir per Konsole Daten an den Server übertragen. Ohne das wir die
+      Funktionalität des Servers geändert haben, gibt er dem Klienten jedoch
+      nur seine Eingabe als Ausgabe zurück.
+    \subsection{}
+    \label{sub:5.3}
+      Die ursprüngliche Implementation von Server und Klient, reicht nicht aus,
+      um einen tatsächlichen Chatraum mehrerer User zu verwirklichen.
+      Jeder der User, deren Verbindung jeweils über einen eigenen Thread
+      verwaltet wird, muss nun mit den anderen Usern kommunizieren können,
+      um Nachrichten auszutauschen. Da Kommunikation zwischen einzelnen
+      unabhängigen Threads nicht einfach zu realisieren ist, soll der Server
+      die Kommunikation verwallten.\\
+      Hierzu haben wir ein Beobachtermuster implementiert, sodass der Server
+      alle Threads in einer Liste speichert und die Threads dem Server mitteilen
+      , wenn sie eine Nachricht senden. In der dafür vorgesehen \texttt{notify}-
+      Methode, wird dann an alle registrierten Threads der \texttt{print}-Befehl
+      weitergereicht.
+      \begin{lstlisting}[language=java]
+        public void notify(String message, int ID, String User) {
+		for (ClientThread t : connections) {
+			if (t.ID != ID) {
+				t.print(User + ":" + message);
+			}
+		}
+	}
+      \end{lstlisting}
+      Ein Thread, der seine Client-Verbindung schließt, wird aus der Liste
+      \textit{connections} entfernt.
+    \subsection{}
+    \label{sub:5.4}
+      Die \textit{Useradmin.java} aus Aufgabenblatt2 liefert uns eine einfache
+      Möglichkeit eine Authentifikation zu implementieren. Nachdem wir die
+      Klasse importiert haben, können wir auf die \texttt{checkUser} Methode
+      zugreifen, um zu prüfen, ob der User in unserer Datenbank vorliegt und
+      das eingegebene Passwort korrekt ist.\\
+      Bei Verbindungsaufbau eines Klienten, sendet der Server eine Anfrage nach
+      Username und Passwort. Damit wir das Passwort nicht als String im
+      Speicher stehen haben, lesen wir den Inputstream Byte für Byte aus und
+      konvertieren diese zu Charactern, die wir einer Liste hinzufügen, bis wir
+      das Terminierungszeichen \texttt{\\r} lesen. Diese Liste lässt sich dann
+      in ein char-Array umwandeln.
+      \begin{lstlisting}[language=java]
+        BufferedReader in = null;
+		try {
+			PrintWriter out = new PrintWriter(
+                            client.getOutputStream(), true);
+			in = new BufferedReader(new InputStreamReader(
+					client.getInputStream()));
+			out.println("Username: ");
+			String username = in.readLine();
+			out.println("Password:");
+			List<Character> l = new ArrayList<Character>();
+			do {
+				char c = (char) in.read();
+				if (c == '\r') {
+					break;
+				}
+				l.add(c);
+			} while (true);
+			char[] password = new char[l.size()];
+			int i = 0;
+			for (Character c : l) {
+				password[i] = c.charValue();
+				i++;
+			}
+			l = null;
+      \end{lstlisting}
+      Der Server prüft intern, ob die User-Passwort-Kombination gültig ist.
+      Ist sie es nicht, wird sofort die Verbindung geschlossen. Wenn der User
+      sich erfolgreich authentifiziert, trägt der Server den User in die Liste
+      eingeloggter User ein. So wird verhindert, dass sich verschiedene Personen
+      mit dem selben Benutzer anmelden.
 
 
 

@@ -1,8 +1,10 @@
+//SourceCode partially from: http://www.dreamincode.net/forums/topic/259777-a-simple-chat-program-with-clientserver-gui-optional/
+//							 http://www.oracle.com/technetwork/java/socket-140484.html
+
+
 package tcp_chat;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.util.LinkedList;
 import java.util.List;
@@ -16,12 +18,12 @@ public class ChatServer {
 	}
 
 	private ServerSocket server;
-	private List<ClientWorker> connections;
+	private List<ClientThread> connections;
 	private final Useradmin useradmin;
 	private List<String> loggedInUsers;
 	
 	public ChatServer() {
-		this.connections = new LinkedList<ClientWorker>();
+		this.connections = new LinkedList<ClientThread>();
 		this.useradmin = new Useradmin();
 		this.loggedInUsers = new LinkedList<String>();
 	}
@@ -34,27 +36,10 @@ public class ChatServer {
 			System.exit(-1);
 		}
 		while (true) {
-			/*
-			try {
-				BufferedReader bufferRead = new BufferedReader(
-						new InputStreamReader(System.in));
-				if (bufferRead.ready()) {
-					String s = bufferRead.readLine();
-
-					System.out.println(s);
-					if (s.equals("quit")) {
-						finalize();
-						System.exit(0);
-					}
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			*/
 			try {
 				// server.accept returns a client connection
 				//w = new ClientWorker(server.accept(),this);
-				ClientWorker t = new ClientWorker(server.accept(),this);
+				ClientThread t = new ClientThread(server.accept(),this);
 				System.out.println("new Connection");
 				t.start();
 				connections.add(t);
@@ -77,7 +62,7 @@ public class ChatServer {
 	}
 	
 	public void notify(String message, int ID, String User) {
-		for (ClientWorker t : connections) {
+		for (ClientThread t : connections) {
 			if (t.ID != ID) {
 				t.print(User + ":" + message);
 			}
@@ -85,7 +70,7 @@ public class ChatServer {
 	}
 	
 	public void disconnect(int ID) {
-		for (ClientWorker t : connections) {
+		for (ClientThread t : connections) {
 			if (t.ID == ID) {
 				loggedInUsers.remove(t.getUser());
 				connections.remove(t);
