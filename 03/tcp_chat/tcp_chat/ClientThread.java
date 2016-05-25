@@ -1,5 +1,7 @@
-//SourceCode partially from: http://www.dreamincode.net/forums/topic/259777-a-simple-chat-program-with-clientserver-gui-optional/
-//							 http://www.oracle.com/technetwork/java/socket-140484.html
+//SourceCode partially from:
+//http://www.dreamincode.net/forums/topic/259777-a-simple-chat-program-with-clientserver-gui-
+// optional/
+//http://www.oracle.com/technetwork/java/socket-140484.html
 
 package tcp_chat;
 

@@ -4,6 +4,29 @@
 \usepackage[ngerman]{babel}
 \usepackage[shortlabels]{enumitem}
 \usepackage{listings}
+\usepackage{color}
+
+\usepackage[title]{appendix}
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstset{frame=tb,
+  language=Java,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3
+}
 
 \author{Patrick Eickhoff, Alexander Timmermann}
 \title{Labreport \#3}
@@ -133,12 +156,10 @@
       Den Bruteforce-Angriff haben wir als Python-Skript geschrieben (sh.
       Appendix B) basierend auf dem Passwort-Bruteforce. Als problematisch
       erwies sich jedoch, dass der LicenseServer bei zu vielen Anfragen bzw.
-      Versuchen die Verbindung geschlossen und einen Neuaufbau für ein
-      gewisses Zeitfenster abgelehnt hat. Aus diesem Grund haben wir sobald
-      keine Antwort mehr vom Server zurückkommt, eine Wartezeit von 10s
-      eingeführt, bis wir wieder eine Verbindung zum Server aufbauen. Dies
-      funktioniert zwar, jedoch treibt es auch die Berechnungszeit enorm in die
-      Höhe.
+      Versuchen die Verbindung schließt und einen Neuaufbau für ca. 10s
+      ablehnt. Da immer wieder 10s zu warten die Rechenzeit enorm erhöhen
+      würde, führen wir das Testen der einzelnen Lizenzschlüssel nebenläufig
+      durch. Dies ist deutlich effizienter.
     \subsection{}
     \label{sub:4.2}
       Eine Möglichkeit für den Betreiber sich gegen Bruteforceangriffe zu
@@ -237,8 +258,20 @@
       Ist sie es nicht, wird sofort die Verbindung geschlossen. Wenn der User
       sich erfolgreich authentifiziert, trägt der Server den User in die Liste
       eingeloggter User ein. So wird verhindert, dass sich verschiedene Personen
-      mit dem selben Benutzer anmelden.
+      mit dem selben Benutzer anmelden. Beim Trennen der Verbindung wird der
+      User wieder aus der Liste entfernt.
+      \newpage
 
-
+      \begin{appendices}
+        \section{DNS-Spoofing Ruby}
+          \lstinputlisting[language=ruby]{tcp_server_spoof.rb}
+         \section{License-Server-Bruteforce}
+          \lstinputlisting[language=python]{serialbruteforce.py}
+        \section{UDP-Receiver}
+          \lstinputlisting{UDPReceiver.java}
+        \section{TCP-Chat}
+          \lstinputlisting[caption=ChatServer.java]{tcp_chat/tcp_chat/ChatServer.java}
+          \lstinputlisting[caption=ClientThread.java]{tcp_chat/tcp_chat/ClientThread.java}
+      \end{appendices}
 
 \end{document}

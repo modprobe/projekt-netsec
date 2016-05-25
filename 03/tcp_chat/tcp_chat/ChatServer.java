@@ -1,5 +1,7 @@
-//SourceCode partially from: http://www.dreamincode.net/forums/topic/259777-a-simple-chat-program-with-clientserver-gui-optional/
-//							 http://www.oracle.com/technetwork/java/socket-140484.html
+//SourceCode partially from:
+//http://www.dreamincode.net/forums/topic/259777-a-simple-chat-program-with-clientserver-gui-
+// optional/
+//http://www.oracle.com/technetwork/java/socket-140484.html
 
 
 package tcp_chat;
@@ -21,7 +23,7 @@ public class ChatServer {
 	private List<ClientThread> connections;
 	private final Useradmin useradmin;
 	private List<String> loggedInUsers;
-	
+
 	public ChatServer() {
 		this.connections = new LinkedList<ClientThread>();
 		this.useradmin = new Useradmin();
@@ -60,7 +62,7 @@ public class ChatServer {
 			System.exit(-1);
 		}
 	}
-	
+
 	public void notify(String message, int ID, String User) {
 		for (ClientThread t : connections) {
 			if (t.ID != ID) {
@@ -68,7 +70,7 @@ public class ChatServer {
 			}
 		}
 	}
-	
+
 	public void disconnect(int ID) {
 		for (ClientThread t : connections) {
 			if (t.ID == ID) {
@@ -78,7 +80,7 @@ public class ChatServer {
 			}
 		}
 	}
-	
+
 	public boolean authenticate(String username, char[] password) {
 		if (loggedInUsers.contains(username)) {
 			return false;

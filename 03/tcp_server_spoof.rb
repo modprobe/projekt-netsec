@@ -1,3 +1,6 @@
+#Soource: http://www.tutorialspoint.com/ruby/ruby\_socket\_programming.htm
+#Modified for own use
+
 require 'socket'
 
 server = TCPServer.new('127.0.1.2', 1337)
