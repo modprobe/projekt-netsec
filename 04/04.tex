@@ -171,6 +171,12 @@ root@routingvm# dsniff -n -i eth1 'port 80'
                       mitgeschnitten werden, während ein Display-Filter alle
                       Pakete mitschneidet, jedoch die Anzeige der Pakete filtert.
 
-        \item[\bf 4.]
+        \item[\bf 4.] Schlauerweise schneiden wir nur Traffic mit, der auf dem
+                      Interface \texttt{eth1} gesendet bzw. empfangen wird,
+                      da über dieses Interface die Surfing-VM angebunden ist.
+
+                      Unabhängig vom Interface können wir auch einen Capture-Filter
+                      einrichten, der den Mitschnitt auf die IP-Adresse der
+                      Surfing-VM beschränkt.
     \end{enumerate}
 \end{document}
