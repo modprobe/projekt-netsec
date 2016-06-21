@@ -1,0 +1,59 @@
+\documentclass{scrartcl}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[ngerman]{babel}
+\usepackage[shortlabels]{enumitem}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\lstdefinestyle{BashInputStyle}{
+  language=bash,
+  basicstyle=\small\sffamily,
+  numbers=left,
+  numberstyle=\tiny,
+  numbersep=3pt,
+  frame=tb,
+  columns=fullflexible,
+  backgroundcolor=\color{yellow!20},
+  linewidth=\linewidth,
+  xleftmargin=1mm
+}
+
+\author{Patrick Eickhoff, Alexander Timmermann}
+\title{Labreport \#5}
+\date{}
+\setcounter{section}{1}
+
+\begin{document}
+    \maketitle
+    \section*{Netzwrkeinstellungen}
+    \label{sec:Netzwrkeinstellungen}
+
+    \section{Absichern eines Einzelplatzrechners mit iptables}
+    \label{sec:Absichern eines Einzelplatzrechners mit iptables}
+    Um das Surfen auf Webseiten zu erlauben, müssen wir den Datenverkehr über
+    die Ports 80 (HTTP), 443 (HTTPS) und 53 (DNS) erlauben:
+    \begin{lstlisting}[style=BashInputStyle]
+      iptables -A OUTPUT -p udp --dport 53 -j ACCEPT
+      iptables -A OUTPUT -p tcp --dport 80 -j ACCEPT
+      iptables -A OUTPUT -p tcp --dport 443 -j ACCEPT
+
+      iptables -A INPUT -p udp --dport 53 -j ACCEPT
+      iptables -A INPUT -p tcp --dport 80 -j ACCEPT
+      iptables -A INPUT -p tcp --dport 443 -j ACCEPT
+    \end{lstlisting}
+    Desweiteren wollen wir sowohl als ICMP-Nachrichten senden und
+    empfangen, als auch SSH-Verbindungen (Port 22) aufbauen können:
+    \begin{lstlisting}[style=BashInputStyle]
+      iptables -A INPUT -p icmp-j ACCEPT
+      iptables -A INPUT -p tcp --dport 22 -j ACCEPT
+
+      iptables -A OUTPUT -p icmp -j ACCEPT
+      iptables -A OUTPUT -p tcp --sport 22 -j ACCEPT
+    \end{lstlisting}
+    Letzendlich wollen wir jeglichen anderen Traffic unterbinden:
+    \begin{lstlisting}[style=BashInputStyle]
+      iptables -A INPUT -j REJECT
+      iptables -A OUTPUT -j REJECT
+    \end{lstlisting}
+\end{document}
