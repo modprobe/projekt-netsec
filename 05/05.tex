@@ -1,4 +1,4 @@
-\documentclass[a4paper,10pt]{scrartcl}
+\documentclass{scrartcl}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[ngerman]{babel}
@@ -110,17 +110,27 @@ iptables -A INPUT -p tcp --dport 443 -j ACCEPT
 iptables -A INPUT -p icmp -j ACCEPT
 iptables -A INPUT -p tcp --dport 22 -j ACCEPT
 
-iptables -A OUTPUT -p icmp -j ACCEPT
-iptables -A OUTPUT -p tcp --sport 22 -j ACCEPT
-	      \end{rootcommands}
-	      Letzendlich wollen wir jeglichen anderen Traffic unterbinden:
-	      \begin{rootcommands}
-iptables -A INPUT -j REJECT
-iptables -A OUTPUT -j REJECT
-	      \end{rootcommands}
+  iptables -A INPUT -p udp --dport 53 -j ACCEPT
+  iptables -A INPUT -p tcp --dport 80 -j ACCEPT
+  iptables -A INPUT -p tcp --dport 443 -j ACCEPT
+	\end{lstlisting}
+	Desweiteren wollen wir sowohl als ICMP-Nachrichten senden und
+	empfangen, als auch SSH-Verbindungen (Port 22) aufbauen können:
+	\begin{lstlisting}
+  iptables -A INPUT -p icmp-j ACCEPT
+  iptables -A INPUT -p tcp --dport 22 -j ACCEPT
+
+  iptables -A OUTPUT -p icmp -j ACCEPT
+  iptables -A OUTPUT -p tcp --sport 22 -j ACCEPT
+	\end{lstlisting}
+	Letzendlich wollen wir jeglichen anderen Traffic unterbinden:
+	\begin{lstlisting}
+  iptables -A INPUT -j REJECT
+  iptables -A OUTPUT -j REJECT
+	\end{lstlisting}
 
 	\item
-	      Die SSH-Verbidung von der CLientVM auf die RouterVM
+	      Die SSH-Verbindung von der ClientVM auf die RouterVM
 	      (\texttt{ssh user@192.168.254.2}) wird verweigert ("refused"),
 	      während die Verbindung von RouterVM auf ClientVM
 	      (\texttt{ssh user@192.168.254.1}) problemlos funktioniert.\\
@@ -131,7 +141,7 @@ iptables -A OUTPUT -j REJECT
 	      Wenn wir statt REJECT DROP für unsere Firewall verwenden,
 	      bekommen wir bei einem Verbindungsversuch keine Refused-Nachricht
 	      mehr zurück, da die Firewall das Packet einfach ohne weitere Aktion
-          verwirft, statt einer Abweisungsnachricht zurückzusenden.
+          verwirft, statt eine Abweisungsnachricht zurückzusenden.
 
 	\item Mithilfe dynamischer Regeln können wir einfach definieren, dass ein- und
 	      ausgehende Pakete, die zu bereits etablierten Verbindungen gehören
@@ -366,28 +376,46 @@ nc -x192.168.254.2:3128 -Xconnect 172.16.134.144 80
 Host *
   ProxyCommand corkscrew 192.168.254.2 3128 %h %p
 		\end{lstlisting}
-		Jetzt können wir einfach einen HTTP-Tunnel via SSH aufbauen:
-        \begin{usercommands}
-ssh -p80 user@172.16.137.144
-        \end{usercommands}
+		\item Wir überlisten die Firewall einfach, indem wir Packete die bei der
+		      ServerVM auf Port 80 eingehen an Port 22 Weiterleiten:
+		      \begin{lstlisting}
+  iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 22
+		\end{lstlisting}
+		\item Firewall:
+		      \begin{lstlisting}
+  iptables -A INPUT -i eth1 -p tcp --dport 3128 -j ACCEPT
+  iptables -A INPUT -i eth1 -j DROP
+  iptables -A FORWARD -j DROP
+  iptables -A OUTPUT -o eth0 -p udp --dport 53 -j ACCEPT
+  iptables -A OUTPUT -o eth0 -p tcp --dport 80 -j ACCEPT
+  iptables -A OUTPUT -o eth0 -p tcp --dport 443 -j ACCEPT
+  iptables -A OUTPUT -o eth0 -j DROP
+		\end{lstlisting}
+		\item In Firefox müssen wir als HTTP-Proxy nur \textit{192.168.254.2
+			3128} einstellen.
+			\item
+			      Als erstes verbinden wir uns über Netcat mit dem SSH-Server der ServerVM:\\
+			      \texttt{nc -x192.168.254.2:3128 -Xconnect 172.16.134.144 80}\\
+			      Danach konfigurieren wir unseren ssh-Befehl mittels Corkscrew in der
+			      \textit{~/.ssh/config}:\\
+			      \begin{lstlisting}
+ Host *
+  ProxyCommand corkscrew 192.168.254.2 3128 %h %p
+			\end{lstlisting}
+			Jetzt können wir einfach einen HTTP-Tunnel via SSH aufbauen:\\
+			\texttt{ssh -p 80 user@172.16.134.144}
+			\item Nachdem wir httptunnel installiert haben, müssen wir nur mit
+			      \texttt{hts -F localhost 80} den Server auf der ServerVM öffnen und
+			      den Client mittels \texttt{htc -P 192.168.254.2:3128 -F 8888
+			      172.16.134.144 80} auf der ClientVM starten. Danach können wir einen
+			      HTTP-Tunnel von der ClientVM zur ServerVM aufbauen:
+			      \texttt{ssh -p 8888 user@localhost}
+		\end{enumerate}
 
-	\item
-        Nachdem wir httptunnel installiert haben, müssen wir nur mit
-		\texttt{hts -F localhost 80} den Server auf der ServerVM öffnen und
-		den Client mittels \texttt{htc -P 192.168.254.2:3128 -F 8888
-		172.16.134.144 80} auf der ClientVM starten. Danach können wir einen
-		HTTP-Tunnel von der ClientVM zur ServerVM aufbauen:
-        \begin{usercommands}
-ssh -p8888 user@localhost
-        \end{usercommands}
-\end{enumerate}
-
-\bigskip
-
-\begin{appendices}
-    \section{Server-Config}
-    \lstinputlisting[caption=server.conf]{server.conf}
-    \section{Client-Config}
-    \lstinputlisting[caption=client.conf]{client.conf}
-\end{appendices}
+    \begin{appendices}
+      \section{Server-Config}
+      \lstinputlisting[caption=server.conf]{server.conf}
+      \section{Client-Config}
+      \lstinputlisting[caption=client.conf]{client.conf}
+  \end{appendices}
 \end{document}
