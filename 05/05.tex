@@ -72,13 +72,6 @@
   sudo ipables -X                 &\Comment{\# delete custom chains}&
 	\end{lstlisting}
 
-	Mit
-	\begin{lstlisting}
-  sudo apt-get update
-  sudo apt-get install openssh-server
-	\end{lstlisting}
-	installieren wir den OpenSSH Server.
-
 	\item  Um das Surfen auf Webseiten zu erlauben, müssen wir den Datenverkehr über
 	      die Ports 80 (HTTP), 443 (HTTPS) und 53 (DNS) der RouterVM erlauben:
 	      \begin{lstlisting}
@@ -153,15 +146,12 @@
 		      über das Interface eth0 geroutet wurden, auf eine interne IP-Adresse ab.
 
 		\item
-		      Die ServerVm von der ClientVM anzupingen funktioniert problemlos,
-		      da die Packete über die RouterVM per Masquerading weitergeleitet werden.
-		      Wenn dann die ICMP-Antwort an der RouterVM ankommt, wird die Destination-IP
-		      auf die zugehörige IP im internen Netzwerk abgebildet.
-		      Die ClientVM können wir jedoch nicht von der ServerVM direkt ansprechen, da
-		      die das Netzwerkinterface der ClientVM nur mit dem Netz unter der RouterVM
-		      verbunden ist. Da wir das interne Mapping der RouterVM nicht kennen, können
-		      wir auch nicht die gemappte IP-Adresse der ClientVM ansprechen.
-
+          Die ClietVM kann die ServerVM anpingen, die ServerVM jedoch nicht die
+          ClientVM. Da die ClientVM nur eine IP-Adresse für ein lokales Netzwerk
+          hat, kann die ServerVM höchstens die RouterVM erreichen. Die Antwort auf
+          den Ping der ClientVM erreicht diese, da die RouterVM per Masquerading
+          die IP-Adresse der Client intern mapped.
+          
 		\item
 		      Die minimale Firewallkonfiguration sollte wie folgt aussehen:
 		      \begin{lstlisting}
