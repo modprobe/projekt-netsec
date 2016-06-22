@@ -6,6 +6,7 @@
 \usepackage{listings}
 \usepackage{xcolor}
 
+\newcommand*{\Comment}[1]{\hfill\makebox[8.0cm][l]{#1}}%
 \lstdefinestyle{BashInputStyle}{
   language=bash,
   basicstyle=\small\sffamily,
@@ -16,7 +17,8 @@
   columns=fullflexible,
   backgroundcolor=\color{yellow!20},
   linewidth=\linewidth,
-  xleftmargin=1mm
+  xleftmargin=1mm,
+  escapechar=\&% char to escape out of listings and back to LaTeX
 }
 \lstset{style=BashInputStyle}
 
@@ -24,83 +26,117 @@
 \title{Labreport \#5}
 \date{}
 
+\def\labelitemi{\textbf{--}}
+
 \begin{document}
     \maketitle
-    \section{Netzwerkeinstellungen}
+    \section*{Aufgabe 1: Netzwerkeinstellungen}
     \label{sec:Netzwerkeinstellungen}
 
-    \section{Absichern eines Einzelplatzrechners mit iptables}
+    \begin{enumerate}
+        \item[\bfseries 2.]
+            \begin{itemize}
+                \item \underline{Client-VM}
+                      \begin{description}
+                          \item[IP-Adresse:] \texttt{192.168.254.44}
+                          \item[Gateway:] \texttt{192.168.254.2}
+                          \item[Nameserver:] \texttt{10.1.1.1}
+                      \end{description}
+
+                \item \underline{Router-VM}
+                      \begin{description}
+                          \item[IP-Adresse eth0:] \texttt{172.16.137.222}
+                          \item[IP-Adresse eth1:] \texttt{192.168.254.2}
+                      \end{description}
+
+                \item \underline{Server-VM}
+                    \begin{description}
+                        \item[IP-Adresse:] \texttt{172.16.137.144}
+                    \end{description}
+            \end{itemize}
+    \end{enumerate}
+
+    \section*{Aufgabe 2: Absichern eines Einzelplatzrechners mit iptables}
     \label{sec:Absichern eines Einzelplatzrechners mit iptables}
 
-    \setcounter{subsection}{1}
-    \subsection{}
-    \label{sub:2.2}
+    \begin{enumerate}[\bfseries 1.]
+        \item Auf der Client-VM sind keine iptables-Regeln vorhanden, die man
+              löschen könnte. Zum Löschen könnte man sonst folgende Befehle benutzen:
 
-    Um das Surfen auf Webseiten zu erlauben, müssen wir den Datenverkehr über
-    die Ports 80 (HTTP), 443 (HTTPS) und 53 (DNS) der RouterVM erlauben:
-    \begin{lstlisting}
-      iptables -A OUTPUT -p udp --dport 53 -j ACCEPT
-      iptables -A OUTPUT -p tcp --dport 80 -j ACCEPT
-      iptables -A OUTPUT -p tcp --dport 443 -j ACCEPT
+              \begin{lstlisting}[style=BashInputStyle]
+sudo iptables -F                &\Comment{\# flush chains in 'filter' table}&
+sudo iptables -t nat -F         &\Comment{\# flush chains in 'nat' table}&
+sudo iptables -t mangle -F      &\Comment{\# flush chains in 'mangle' table}&
+sudo ipables -X                 &\Comment{\# delete custom chains}&
+              \end{lstlisting}
 
-      iptables -A INPUT -p udp --dport 53 -j ACCEPT
-      iptables -A INPUT -p tcp --dport 80 -j ACCEPT
-      iptables -A INPUT -p tcp --dport 443 -j ACCEPT
-    \end{lstlisting}
-    Desweiteren wollen wir sowohl als ICMP-Nachrichten senden und
-    empfangen, als auch SSH-Verbindungen (Port 22) aufbauen können:
-    \begin{lstlisting}
-      iptables -A INPUT -p icmp-j ACCEPT
-      iptables -A INPUT -p tcp --dport 22 -j ACCEPT
+              Mit
+              \begin{lstlisting}[style=BashInputStyle]
+sudo apt-get update
+sudo apt-get install openssh-server
+              \end{lstlisting}
+              installieren wir den OpenSSH Server.
 
-      iptables -A OUTPUT -p icmp -j ACCEPT
-      iptables -A OUTPUT -p tcp --sport 22 -j ACCEPT
-    \end{lstlisting}
-    Letzendlich wollen wir jeglichen anderen Traffic unterbinden:
-    \begin{lstlisting}
-      iptables -A INPUT -j REJECT
-      iptables -A OUTPUT -j REJECT
-    \end{lstlisting}
+        \item  Um das Surfen auf Webseiten zu erlauben, müssen wir den Datenverkehr über
+               die Ports 80 (HTTP), 443 (HTTPS) und 53 (DNS) der RouterVM erlauben:
+               \begin{lstlisting}
+iptables -A OUTPUT -p udp --dport 53 -j ACCEPT
+iptables -A OUTPUT -p tcp --dport 80 -j ACCEPT
+iptables -A OUTPUT -p tcp --dport 443 -j ACCEPT
 
-    \subsection{}
-    \label{sub:2.3}
-    \begin{itemize}
-      \item
-      Die SSH-Verbidung von der CLientVM auf die RouterVM
-      (\texttt{ssh user@192.168.254.2}) wird verweigert ("refused"),
-      während die Verbindung von RouterVM auf ClientVM
-      (\texttt{ssh user@192.168.254.1}) problemlos funktioniert.
-      \item
-      Per \texttt{nc -l 5555} setzen wir einen Server auf der CLientVM
-      auf. Wenn wir diesen jedoch von der RouterVm mit
-      \texttt{nc 192.168.254.2 5555} ansprechen wollen, wird die
-      Verbindung verweigert ("refused").
-      \item
-      Wenn wir statt REJECT DROP für unsere Firewall verwenden,
-      bekommen wir bei einem Verbindungsversuch keine Refused-Nachricht
-      mehr zurück. Da die Firewall das Packet einfach ignoriert.
-    \end{itemize}
+iptables -A INPUT -p udp --dport 53 -j ACCEPT
+iptables -A INPUT -p tcp --dport 80 -j ACCEPT
+ iptables -A INPUT -p tcp --dport 443 -j ACCEPT
+               \end{lstlisting}
+               Desweiteren wollen wir sowohl als ICMP-Nachrichten senden und
+               empfangen, als auch SSH-Verbindungen (Port 22) aufbauen können:
+               \begin{lstlisting}
+iptables -A INPUT -p icmp-j ACCEPT
+iptables -A INPUT -p tcp --dport 22 -j ACCEPT
 
-  \subsection{}
-  \label{sub:2.4}
-  Mithilfe dynaischer Regeln können wir einfach definieren, dass ein- und
-  ausgehende Packete, die zu bereits etablierten Verbindungen gehören
-  (ESTABLISHED,RELATED), automatisch akzeptiert werden:
-  \begin{lstlisting}
-    iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
-    iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
-  \end{lstlisting}
-  Die restlichen Regeln definieren sich dann wie folgt:
-  \begin{lstlisting}[]
-    iptables -A OUTPUT -p udp --dport 53 -j ACCEPT
-    iptables -A OUTPUT -p tcp --dport 80 -j ACCEPT
-    iptables -A OUTPUT -p tcp --dport 443 -j ACCEPT
+iptables -A OUTPUT -p icmp -j ACCEPT
+iptables -A OUTPUT -p tcp --sport 22 -j ACCEPT
+               \end{lstlisting}
+               Letzendlich wollen wir jeglichen anderen Traffic unterbinden:
+               \begin{lstlisting}
+iptables -A INPUT -j REJECT
+iptables -A OUTPUT -j REJECT
+               \end{lstlisting}
 
-    iptables -A INPUT -p tcp --dport 22 -j ACCEPT
-    iptables -A INPUT -p icmp-j ACCEPT
-    iptables -A INPUT -j REJECT
-  \end{lstlisting}
-  Dynamische Regeln sind sehr angenehm, da sie erlauben Packete abhängig
-  von ihrem Zustand zu behandeln. So werden deutlich weniger Regeln benötigt,
-  um die Kommunikation bereits aufgebauter Verbindungen zu erlauben.
+        \item
+            \begin{itemize}
+                \item Die SSH-Verbidung von der CLientVM auf die RouterVM
+                      (\texttt{ssh user@192.168.254.2}) wird verweigert ("refused"),
+                      während die Verbindung von RouterVM auf ClientVM
+                      (\texttt{ssh user@192.168.254.1}) problemlos funktioniert.
+                \item Per \texttt{nc -l 5555} setzen wir einen Server auf der CLientVM
+                      auf. Wenn wir diesen jedoch von der RouterVm mit
+                      \texttt{nc 192.168.254.2 5555} ansprechen wollen, wird die
+                      Verbindung verweigert ("refused").
+                \item Wenn wir statt REJECT DROP für unsere Firewall verwenden,
+                      bekommen wir bei einem Verbindungsversuch keine Refused-Nachricht
+                      mehr zurück. Da die Firewall das Packet einfach ignoriert.
+            \end{itemize}
+
+        \item Mithilfe dynamischer Regeln können wir einfach definieren, dass ein- und
+              ausgehende Packete, die zu bereits etablierten Verbindungen gehören
+              (ESTABLISHED,RELATED), automatisch akzeptiert werden:
+              \begin{lstlisting}
+iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+              \end{lstlisting}
+              Die restlichen Regeln definieren sich dann wie folgt:
+              \begin{lstlisting}[]
+iptables -A OUTPUT -p udp --dport 53 -j ACCEPT
+iptables -A OUTPUT -p tcp --dport 80 -j ACCEPT
+iptables -A OUTPUT -p tcp --dport 443 -j ACCEPT
+
+iptables -A INPUT -p tcp --dport 22 -j ACCEPT
+iptables -A INPUT -p icmp-j ACCEPT
+iptables -A INPUT -j REJECT
+              \end{lstlisting}
+              Dynamische Regeln sind sehr angenehm, da sie erlauben Packete abhängig
+              von ihrem Zustand zu behandeln. So werden deutlich weniger Regeln benötigt,
+              um die Kommunikation bereits aufgebauter Verbindungen zu erlauben.
+    \end{enumerate}
 \end{document}
