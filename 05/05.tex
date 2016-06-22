@@ -1,4 +1,4 @@
-\documentclass{scrartcl}
+\documentclass[a4paper,10pt]{scrartcl}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[ngerman]{babel}
@@ -6,7 +6,7 @@
 \usepackage{listings}
 \usepackage{xcolor}
 \usepackage[title]{appendix}
-\usepackage[left=2cm,right=2cm,top=2cm,bottom=3cm]{geometry}
+\usepackage[left=1cm,right=1cm,top=1cm,bottom=3cm]{geometry}
 \usepackage{graphicx}
 \usepackage{hyperref}
 
@@ -109,25 +109,23 @@ iptables -A INPUT -p tcp --dport 443 -j ACCEPT
 	      \begin{rootcommands}
 iptables -A INPUT -p icmp -j ACCEPT
 iptables -A INPUT -p tcp --dport 22 -j ACCEPT
-
-  iptables -A INPUT -p udp --dport 53 -j ACCEPT
-  iptables -A INPUT -p tcp --dport 80 -j ACCEPT
-  iptables -A INPUT -p tcp --dport 443 -j ACCEPT
-	\end{lstlisting}
+iptables -A INPUT -p udp --dport 53 -j ACCEPT
+iptables -A INPUT -p tcp --dport 80 -j ACCEPT
+iptables -A INPUT -p tcp --dport 443 -j ACCEPT
+        \end{rootcommands}
 	Desweiteren wollen wir sowohl als ICMP-Nachrichten senden und
 	empfangen, als auch SSH-Verbindungen (Port 22) aufbauen können:
-	\begin{lstlisting}
-  iptables -A INPUT -p icmp-j ACCEPT
-  iptables -A INPUT -p tcp --dport 22 -j ACCEPT
-
-  iptables -A OUTPUT -p icmp -j ACCEPT
-  iptables -A OUTPUT -p tcp --sport 22 -j ACCEPT
-	\end{lstlisting}
+	\begin{rootcommands}
+iptables -A INPUT -p icmp-j ACCEPT
+iptables -A INPUT -p tcp --dport 22 -j ACCEPT
+iptables -A OUTPUT -p icmp -j ACCEPT
+iptables -A OUTPUT -p tcp --sport 22 -j ACCEPT
+	\end{rootcommands}
 	Letzendlich wollen wir jeglichen anderen Traffic unterbinden:
-	\begin{lstlisting}
-  iptables -A INPUT -j REJECT
-  iptables -A OUTPUT -j REJECT
-	\end{lstlisting}
+	\begin{rootcommands}
+iptables -A INPUT -j REJECT
+iptables -A OUTPUT -j REJECT
+	\end{rootcommands}
 
 	\item
 	      Die SSH-Verbindung von der ClientVM auf die RouterVM
@@ -412,10 +410,12 @@ Host *
 			      \texttt{ssh -p 8888 user@localhost}
 		\end{enumerate}
 
-    \begin{appendices}
-      \section{Server-Config}
-      \lstinputlisting[caption=server.conf]{server.conf}
-      \section{Client-Config}
-      \lstinputlisting[caption=client.conf]{client.conf}
-  \end{appendices}
+\pagebreak
+
+\begin{appendices}
+    \section{Server-Config}
+    \lstinputlisting[caption=server.conf]{server.conf}
+    \section{Client-Config}
+    \lstinputlisting[caption=client.conf]{client.conf}
+\end{appendices}
 \end{document}
