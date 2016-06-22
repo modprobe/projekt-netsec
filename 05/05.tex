@@ -6,6 +6,7 @@
 \usepackage{listings}
 \usepackage{xcolor}
 
+\newcommand*{\Comment}[1]{\hfill\makebox[8.0cm][l]{#1}}%
 \lstdefinestyle{BashInputStyle}{
   language=bash,
   basicstyle=\small\sffamily,
@@ -16,13 +17,16 @@
   columns=fullflexible,
   backgroundcolor=\color{yellow!20},
   linewidth=\linewidth,
-  xleftmargin=1mm
+  xleftmargin=1mm,
+  escapechar=\&% char to escape out of listings and back to LaTeX
 }
 \lstset{style=BashInputStyle}
 
 \author{Patrick Eickhoff, Alexander Timmermann}
 \title{Labreport \#5}
 \date{}
+\def\labelitemi{\textbf{--}}
+
 \def\labelitemi{\textbf{--}}
 
 \begin{document}
@@ -133,7 +137,6 @@ iptables -A INPUT -j REJECT
               Dynamische Regeln sind sehr angenehm, da sie erlauben Packete abhängig
               von ihrem Zustand zu behandeln. So werden deutlich weniger Regeln benötigt,
               um die Kommunikation bereits aufgebauter Verbindungen zu erlauben.
-\end{enumerate}
 
   \section{Absichern eines Netzwerks}
   \label{sec:Absichern eines Netzwerks}
@@ -232,5 +235,5 @@ SSH-Packete.\\
   \item Statdessen benutzen wir Dynamic-Forwarding, um unsere SSH-Verbindung als
   SOCKS-Proxy zu verwenden.
 \end{itemize}
-
+\end{enumerate}
 \end{document}
