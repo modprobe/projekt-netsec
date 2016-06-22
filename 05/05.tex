@@ -1,4 +1,4 @@
-\documentclass{scrartcl}
+\documentclass[a4paper,10pt]{scrartcl}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[ngerman]{babel}
@@ -6,6 +6,9 @@
 \usepackage{listings}
 \usepackage{xcolor}
 \usepackage[title]{appendix}
+\usepackage[left=2cm,right=2cm,top=2cm,bottom=3cm]{geometry}
+\usepackage{graphicx}
+\usepackage{hyperref}
 
 \newcommand*{\Comment}[1]{\hfill\makebox[8.0cm][l]{#1}}%
 \lstdefinestyle{BashInputStyle}{
@@ -13,20 +16,32 @@
   basicstyle=\small\sffamily,
   numbers=left,
   numberstyle=\tiny,
-  numbersep=3pt,
+  numbersep=6pt,
   frame=tb,
   columns=fullflexible,
   backgroundcolor=\color{yellow!20},
   linewidth=\linewidth,
-  xleftmargin=1mm,
+  xleftmargin=5mm,
+  framexleftmargin=5mm,
   escapechar=\&% char to escape out of listings and back to LaTeX
 }
 \lstset{style=BashInputStyle}
 
+\lstnewenvironment{rootcommands}[1][]{%
+  \renewcommand{\thelstnumber}{\#}
+  \lstset{style=BashInputStyle,#1}%
+}{%
+}
+
+\lstnewenvironment{usercommands}[1][]{%
+  \renewcommand{\thelstnumber}{\$}
+  \lstset{style=BashInputStyle,#1}%
+}{%
+}
+
 \author{Patrick Eickhoff, Alexander Timmermann}
 \title{Labreport \#5}
 \date{}
-\def\labelitemi{\textbf{--}}
 
 \def\labelitemi{\textbf{--}}
 
@@ -65,45 +80,44 @@
 	\item Auf der Client-VM sind keine iptables-Regeln vorhanden, die man
 	      löschen könnte. Zum Löschen könnte man sonst folgende Befehle benutzen:
 
-	      \begin{lstlisting}
-  sudo iptables -F                &\Comment{\# flush chains in 'filter' table}&
-  sudo iptables -t nat -F         &\Comment{\# flush chains in 'nat' table}&
-  sudo iptables -t mangle -F      &\Comment{\# flush chains in 'mangle' table}&
-  sudo ipables -X                 &\Comment{\# delete custom chains}&
-	\end{lstlisting}
+	      \begin{rootcommands}
+iptables -F                &\Comment{\# flush chains in 'filter' table}&
+iptables -t nat -F         &\Comment{\# flush chains in 'nat' table}&
+iptables -t mangle -F      &\Comment{\# flush chains in 'mangle' table}&
+ipables -X                 &\Comment{\# delete custom chains}&
+	      \end{rootcommands}
 
-	Mit
-	\begin{lstlisting}
-  sudo apt-get update
-  sudo apt-get install openssh-server
-	\end{lstlisting}
-	installieren wir den OpenSSH Server.
+    	  Mit
+    	  \begin{rootcommands}
+apt-get update
+apt-get install openssh-server
+    	  \end{rootcommands}
+    	  installieren wir den OpenSSH Server.
 
-	\item  Um das Surfen auf Webseiten zu erlauben, müssen wir den Datenverkehr über
+	\item Um das Surfen auf Webseiten zu erlauben, müssen wir den Datenverkehr über
 	      die Ports 80 (HTTP), 443 (HTTPS) und 53 (DNS) der RouterVM erlauben:
-	      \begin{lstlisting}
-  iptables -A OUTPUT -p udp --dport 53 -j ACCEPT
-  iptables -A OUTPUT -p tcp --dport 80 -j ACCEPT
-  iptables -A OUTPUT -p tcp --dport 443 -j ACCEPT
+	      \begin{rootcommands}
+iptables -A OUTPUT -p udp --dport 53 -j ACCEPT
+iptables -A OUTPUT -p tcp --dport 80 -j ACCEPT
+iptables -A OUTPUT -p tcp --dport 443 -j ACCEPT
+iptables -A INPUT -p udp --dport 53 -j ACCEPT
+iptables -A INPUT -p tcp --dport 80 -j ACCEPT
+iptables -A INPUT -p tcp --dport 443 -j ACCEPT
+    	  \end{rootcommands}
+	      Desweiteren wollen wir sowohl als ICMP-Nachrichten senden und
+	      empfangen, als auch SSH-Verbindungen (Port 22) aufbauen können:
+	      \begin{rootcommands}
+iptables -A INPUT -p icmp -j ACCEPT
+iptables -A INPUT -p tcp --dport 22 -j ACCEPT
 
-  iptables -A INPUT -p udp --dport 53 -j ACCEPT
-  iptables -A INPUT -p tcp --dport 80 -j ACCEPT
-  iptables -A INPUT -p tcp --dport 443 -j ACCEPT
-	\end{lstlisting}
-	Desweiteren wollen wir sowohl als ICMP-Nachrichten senden und
-	empfangen, als auch SSH-Verbindungen (Port 22) aufbauen können:
-	\begin{lstlisting}
-  iptables -A INPUT -p icmp-j ACCEPT
-  iptables -A INPUT -p tcp --dport 22 -j ACCEPT
-
-  iptables -A OUTPUT -p icmp -j ACCEPT
-  iptables -A OUTPUT -p tcp --sport 22 -j ACCEPT
-	\end{lstlisting}
-	Letzendlich wollen wir jeglichen anderen Traffic unterbinden:
-	\begin{lstlisting}
-  iptables -A INPUT -j REJECT
-  iptables -A OUTPUT -j REJECT
-	\end{lstlisting}
+iptables -A OUTPUT -p icmp -j ACCEPT
+iptables -A OUTPUT -p tcp --sport 22 -j ACCEPT
+	      \end{rootcommands}
+	      Letzendlich wollen wir jeglichen anderen Traffic unterbinden:
+	      \begin{rootcommands}
+iptables -A INPUT -j REJECT
+iptables -A OUTPUT -j REJECT
+	      \end{rootcommands}
 
 	\item
 	      Die SSH-Verbidung von der CLientVM auf die RouterVM
@@ -111,222 +125,269 @@
 	      während die Verbindung von RouterVM auf ClientVM
 	      (\texttt{ssh user@192.168.254.1}) problemlos funktioniert.\\
 	      Per \texttt{nc -l 5555} setzen wir einen Server auf der CLientVM
-	      auf. Wenn wir diesen jedoch von der RouterVm mit
+	      auf. Wenn wir diesen jedoch von der RouterVM mit
 	      \texttt{nc 192.168.254.2 5555} ansprechen wollen, wird die
 	      Verbindung verweigert ("refused").\\
 	      Wenn wir statt REJECT DROP für unsere Firewall verwenden,
 	      bekommen wir bei einem Verbindungsversuch keine Refused-Nachricht
-	      mehr zurück. Da die Firewall das Packet einfach ignoriert.
+	      mehr zurück, da die Firewall das Packet einfach ohne weitere Aktion
+          verwirft, statt einer Abweisungsnachricht zurückzusenden.
 
 	\item Mithilfe dynamischer Regeln können wir einfach definieren, dass ein- und
-	      ausgehende Packete, die zu bereits etablierten Verbindungen gehören
+	      ausgehende Pakete, die zu bereits etablierten Verbindungen gehören
 	      (ESTABLISHED,RELATED), automatisch akzeptiert werden:
-	      \begin{lstlisting}
-  iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
-  iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
-	\end{lstlisting}
-	Die restlichen Regeln definieren sich dann wie folgt:
-	\begin{lstlisting}[]
-  iptables -A OUTPUT -p udp --dport 53 -j ACCEPT
-  iptables -A OUTPUT -p tcp --dport 80 -j ACCEPT
-  iptables -A OUTPUT -p tcp --dport 443 -j ACCEPT
-
-  iptables -A INPUT -p tcp --dport 22 -j ACCEPT
-  iptables -A INPUT -p icmp-j ACCEPT
-  iptables -A INPUT -j REJECT
-	\end{lstlisting}
-	Dynamische Regeln sind sehr angenehm, da sie erlauben Packete abhängig
-	von ihrem Zustand zu behandeln. So werden deutlich weniger Regeln benötigt,
-	um die Kommunikation bereits aufgebauter Verbindungen zu erlauben.
+	      \begin{rootcommands}
+iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+	      \end{rootcommands}
+	      Die restlichen Regeln definieren sich dann wie folgt:
+	      \begin{rootcommands}[]
+iptables -A OUTPUT -p udp --dport 53 -j ACCEPT
+iptables -A OUTPUT -p tcp --dport 80 -j ACCEPT
+iptables -A OUTPUT -p tcp --dport 443 -j ACCEPT
+iptables -A INPUT -p tcp --dport 22 -j ACCEPT
+iptables -A INPUT -p icmp-j ACCEPT
+iptables -A INPUT -j REJECT
+	      \end{rootcommands}
+	      Dynamische Regeln sind sehr angenehm, da sie erlauben Pakete abhängig
+	      von ihrem Zustand zu behandeln. So werden deutlich weniger Regeln benötigt,
+	      um die Kommunikation bereits aufgebauter Verbindungen zu erlauben.
 \end{enumerate}
 
-	\section*{Aufgabe 3: Absichern eines Netzwerks}
-	\label{sec:Absichern eines Netzwerks}
-	\begin{enumerate}[\bfseries 1.]
-		\item
-		      Folgenden Befehl haben wir in der \textit{rc.local} auf der RouterVM gefunden:\\
-		      \texttt{iptables -t nat -A POSTROUTING -o eth0 -s 192.168.254.0/24 -j MASQUERADE}\\
-		      Die \textit{NAT-Tabelle} gibt die Firewall-Regeln an, für Packete, die neue
-		      Verbindungen aufbauen wollen. Die Postrouting-Chain behandelt Packets nachdem
-		      sie geroutet wurden. Der Befehl maskiert, bildet die Source-IP, der Packete,
-		      die aus dem internen Netzwerk von Ip-Adressen 192.168.254.0/24 gesendet und
-		      über das Interface eth0 geroutet wurden, auf eine interne IP-Adresse ab.
+\section*{Aufgabe 3: Absichern eines Netzwerks}
+\label{sec:Absichern eines Netzwerks}
 
-		\item
-		      Die ServerVm von der ClientVM anzupingen funktioniert problemlos,
-		      da die Packete über die RouterVM per Masquerading weitergeleitet werden.
-		      Wenn dann die ICMP-Antwort an der RouterVM ankommt, wird die Destination-IP
-		      auf die zugehörige IP im internen Netzwerk abgebildet.
-		      Die ClientVM können wir jedoch nicht von der ServerVM direkt ansprechen, da
-		      die das Netzwerkinterface der ClientVM nur mit dem Netz unter der RouterVM
-		      verbunden ist. Da wir das interne Mapping der RouterVM nicht kennen, können
-		      wir auch nicht die gemappte IP-Adresse der ClientVM ansprechen.
+\begin{enumerate}[\bfseries 1.]
+	\item
+        Folgenden Befehl haben wir in der \textit{rc.local} auf der RouterVM gefunden:\\
+        \texttt{iptables -t nat -A POSTROUTING -o eth0 -s 192.168.254.0/24 -j MASQUERADE}\\
+        Die \textit{NAT-Tabelle} gibt die Firewall-Regeln für Pakete an, die neue
+        Verbindungen aufbauen wollen. Die Postrouting-Chain behandelt Pakete nachdem
+        sie geroutet wurden. Der Befehl maskiert, bildet die Source-IP, der Pakete,
+        die aus dem internen Netzwerk von Ip-Adressen 192.168.254.0/24 gesendet und
+        über das Interface eth0 geroutet wurden, auf eine interne IP-Adresse ab.
 
-		\item
-		      Die minimale Firewallkonfiguration sollte wie folgt aussehen:
-		      \begin{lstlisting}
-  iptables -A FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
-  iptables -A FORWARD -p tcp -d 172.16.134.144 --dport 80 -j DROP
-  iptables -A FORWARD -p tcp -d 10.1.1.2 -j DROP
-  iptables -A FORWARD -p tcp -d 10.0.0.0/8 -j DROP
-  iptables -A FORWARD -i eth1 -o eth0 -p udp -m udp --dport 53 -j ACCEPT
-  iptables -A FORWARD -i eth1 -o eth0 -p tcp -m tcp --dport 80 -j ACCEPT
-  iptables -A FORWARD -i eth1 -o eth0 -p tcp -m tcp --dport 443 -j ACCEPT
-  iptables -A FORWARD -j DROP
+	\item
+        Die ServerVM von der ClientVM anzupingen funktioniert problemlos,
+        da die Pakete über die RouterVM per Masquerading weitergeleitet werden.
+        Wenn dann die ICMP-Antwort an der RouterVM ankommt, wird die Destination-IP
+        auf die zugehörige IP im internen Netzwerk abgebildet.
+        Die ClientVM können wir jedoch nicht von der ServerVM direkt ansprechen, da
+        die das Netzwerkinterface der ClientVM nur mit dem Netz unter der RouterVM
+        verbunden ist. Da wir das interne Mapping der RouterVM nicht kennen, können
+        wir auch nicht die gemappte IP-Adresse der ClientVM ansprechen.
+
+	\item
+        Die minimale Firewallkonfiguration sollte wie folgt aussehen:
+        \begin{rootcommands}
+iptables -A FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+iptables -A FORWARD -p tcp -d 172.16.134.144 --dport 80 -j DROP
+iptables -A FORWARD -p tcp -d 10.1.1.2 -j DROP
+iptables -A FORWARD -p tcp -d 10.0.0.0/8 -j DROP
+iptables -A FORWARD -i eth1 -o eth0 -p udp -m udp --dport 53 -j ACCEPT
+iptables -A FORWARD -i eth1 -o eth0 -p tcp -m tcp --dport 80 -j ACCEPT
+iptables -A FORWARD -i eth1 -o eth0 -p tcp -m tcp --dport 443 -j ACCEPT
+iptables -A FORWARD -j DROP
+        \end{rootcommands}
+
+	\item
+        Damit eine SSH-Verbindung aufgebaut werden kann, müssen wir Forwarding zu Port
+        22 erlauben:
+        \begin{rootcommands}
+iptables -I FORWARD 2 -i eth1 -o eth0 --dport 22 -j ACCEPT
+        \end{rootcommands}
+
+	\item
+        Zum forwarden der SSH-Verbindung an die ClientVM brauchen wir nur eine Regel:
+        \begin{lstlisting}
+iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 5022 -j DNAT \
+           --to-destination 192.168.254.44:22
 		\end{lstlisting}
-
-		\item
-		      Damit eine SSH-Verbindung aufgebaut werden kann, müssen wir Forwarding zu Port
-		      22 erlauben: \texttt{iptables -I FORWARD 2 -i eth1 -o eth0 --dport 22 -j ACCEPT}
-
-		\item
-		      Zum forwarden der SSH-Verbindung an die ClientVM brauchen wir nur eine Regel:
-		      \begin{lstlisting}
-  iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 5022 -j DNAT
-            --to-destination 192.168.254.44:22
-		\end{lstlisting}
-		Die Packete die an Port 5022 des äußeren Interfaces eth0 eingehen, werden vorm
+		Die Pakete die an Port 5022 des äußeren Interfaces eth0 eingehen, werden vorm
 		Routing zur ClientVM (192.168.254.44) auf Port 22 weitergeleitet.
 
-		\item
-		      Nachdem wir eth0 eine weitere IP-Adresse 172.16.137.223 eingerichtet haben,
-		      geben wir an, dass alle Packete, die an diese IP-Adresse geschickt werden,
-		      zur ClientVM weitergeleitet werden:
-		      \begin{lstlisting}
-  iptables -t nat -A PREROUTING -i eth0 -d 172.16.137.223 -j DNAT
-            --to-destination 192.168.254.44
+	\item
+        Nachdem wir eth0 eine weitere IP-Adresse 172.16.137.223 eingerichtet haben,
+		geben wir an, dass alle Pakete, die an diese IP-Adresse geschickt werden,
+		zur ClientVM weitergeleitet werden:
+		\begin{lstlisting}
+iptables -t nat -A PREROUTING -i eth0 -d 172.16.137.223 -j DNAT \
+         --to-destination 192.168.254.44
 		\end{lstlisting}
-	\end{enumerate}
+\end{enumerate}
 
 	\section*{Aufgabe 4: SSH-Tunnel}
 	\label{sec:SSH-Tunnel}
 	\begin{enumerate}[\bfseries 1.]
 		\item
-		      Als erstes konfigurieren wir die Firewall:
-		      \begin{lstlisting}
-  iptables -A FORWARD -m contrack --ctstate ESTABLISHED,RELATED -j ACCEPT
-  iptables -A FORWARD -i eth1 -o eth0 -p udp --dport 53 -j ACCEPT
-  iptables -A FORWARD -i eth1 -o eth0 -p tcp --dport 22 -j ACCEPT
-  iptables -A FORWARD -j DROP
-		\end{lstlisting}
+		    Als erstes konfigurieren wir die Firewall:
+            \begin{rootcommands}
+iptables -A FORWARD -m contrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -i eth1 -o eth0 -p udp --dport 53 -j ACCEPT
+iptables -A FORWARD -i eth1 -o eth0 -p tcp --dport 22 -j ACCEPT
+iptables -A FORWARD -j DROP
+            \end{rootcommands}
 
-		\item
-		      Ein SSH-Tunnel lässt sich einfach über den ssh-Befehl aufbauen: \\
-		      \texttt{ssh -L 9000:172.16.137.144:80 user@172.16.137.144}\\
-		      Mit obigem Befehl binden wir Port 80 der ServerVM an Port 9000 der ClientVM
-		      per SSH-Verbindung. Dann lässt sich über \textit{localhost:9000} auf den
-		      Webserver der ServerVM zugreifen. Über Wireshark sehen wir nur die
-		      SSH-Packete.\\
-		      (Quelle http://blog.trackets.com/2014/05/17/ssh-tunnel-local-and-remote-port-forwarding-explained-with-examples.html)
+	\item
+		Ein SSH-Tunnel lässt sich einfach über den ssh-Befehl aufbauen\footnote{Quelle: \url{http://blog.trackets.com/2014/05/17/ssh-tunnel-local-and-remote-port-forwarding-explained-with-examples.html}}:
+        \begin{usercommands}
+ssh -L 9000:localhost:80 user@172.16.137.144
+        \end{usercommands}
+		Mit obigem Befehl binden wir Port 80 der ServerVM an Port 9000 der ClientVM
+		per SSH-Verbindung. Dann lässt sich über \textit{localhost:9000} auf den
+		Webserver der ServerVM zugreifen. Über Wireshark sehen wir nur die
+		SSH-Pakete.\\
 
-		\item
-		      Local-Forwarding zum Browsen wäre sehr aufwendig, da wir jeden Port, den
-		      wir zum Surfen brauchen, einzeln geforwarded werden muss.
-		      Statdessen benutzen wir Dynamic-Forwarding, um unsere SSH-Verbindung als
-		      SOCKS-Proxy zu verwenden: \\
-		      \texttt{ssh -C -D 1080 user@172.16.137.223}\\
-		      Im Browser müssen wir nun den Socks Proxy konfigurieren:
-		      SOCKS-Host=127.0.0.1 und SOCKS-Port 1080.\\
-		      (Quelle https://help.ubuntu.com/community/SSH/OpenSSH/PortForwarding)
+	\item
+	    Local Forwarding zum Browsen wäre sehr aufwendig, da jeder Port, den
+		wir zum Surfen brauchen, einzeln geforwarded werden muss.
+		Statdessen benutzen wir Dynamic Forwarding, um unsere SSH-Verbindung als
+		SOCKS-Proxy zu verwenden\footnote{Quelle: \url{https://help.ubuntu.com/community/SSH/OpenSSH/PortForwarding}}:
+        \begin{usercommands}
+ssh -D 5555 user@172.16.137.144
+        \end{usercommands}
+		Im Browser müssen wir nun den Proxy konfigurieren:\\
+        \includegraphics[width=0.4\textwidth]{proxy.png}
 
     \item
-		      Zuerst starten wir auf der ClientVM einen Server mittels Netcat
-		      \texttt{nc -L 5555} und bauen dann unseren SHH-Tunnel zum Remote-Forwarding
-		      auf \texttt{ssh -R 9000:localhost:5555 user@172.16.137.144}. Nun können wir uns
-		      auf der ServerVM mittels \texttt{nc localhost:5555} verbinden.
+		Zuerst starten wir auf der ClientVM einen Server mittels Netcat
+		\texttt{nc -L 5555} und bauen dann unseren SHH-Tunnel zum Remote-Forwarding
+		auf
+        \begin{usercommands}
+ssh -R 9000:localhost:5555 user@172.16.137.144
+        \end{usercommands}
+        Nun können wir uns auf der ServerVM mittels \texttt{nc localhost 9000} verbinden.
 	\end{enumerate}
 
 	\section*{Aufgabe 5: OpenVPN}
 	\label{sec:OpenVPN}
 	\begin{enumerate}[\bfseries 1.]
-		\item Filterregeln:
-		      \begin{lstlisting}
-  iptables -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
-  iptables -A FORWARD -i eth1 -o eth0 -j ACCEPT
-  iptables -A FORWARD -i eth0 -o eth1 -j DROP
-		\end{lstlisting}
+		\item
+            Filterregeln:
+		    \begin{rootcommands}
+iptables -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -i eth1 -o eth0 -j ACCEPT
+iptables -A FORWARD -i eth0 -o eth1 -j DROP
+		    \end{rootcommands}
 
 		\item
-		      Der Server und Client sind wie in der \textit{client.conf} (App. A)
-		      und \textit{server.conf} (App. B) angegeben, konfiguriert.
-		\item Die Firewall erlaubt Packete die Port 1194 für OpenVPN
-		      ansteuern und Packete die vom Interface tun0, welches von der VPN
-		      genutzt wird, eingehen.
-		      Ausgehen dürfen nur Packete die zu einer bereits etablierten
-		      VPN-Verbindung gehören:
-		      \begin{lstlisting}
-  iptables -A INPUT -i tun0 -j ACCEPT
-  iptables -A INPUT -p tcp --dport 1194 -j ACCEPT
-  iptables -A INPUT -j DROP
-  iptables -A OUTPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
-  iptables -A OUTPUT -j DROP
-		\end{lstlisting}
+		    Der Server und Client sind wie in der \textit{client.conf} (App. A)
+		    und \textit{server.conf} (App. B) angegeben, konfiguriert.
+		\item
+            Die Firewall erlaubt Pakete die Port 1194 für OpenVPN
+		    ansteuern und Pakete die vom Interface tun0, welches von der VPN
+		    genutzt wird, eingehen.
+		    Ausgehen dürfen nur Pakete die zu einer bereits etablierten
+		    VPN-Verbindung gehören:
+		    \begin{rootcommands}
+iptables -A INPUT -i tun0 -j ACCEPT
+iptables -A INPUT -p tcp --dport 1194 -j ACCEPT
+iptables -A INPUT -j DROP
+iptables -A OUTPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+iptables -A OUTPUT -j DROP
+            \end{rootcommands}
 		\item
 		      Wir starten erst VPN-Client und -Server:
 		      \texttt{openvpn client.conf} und \texttt{openvpn server.conf}.
 		      Auf der ClientVM sehen wir dann bei erfolgreicher Verbindung:\\
-		      \texttt{Peer Connection Initiated with [AF\_INET]172.16.137.222:54286 \\
-		      	Initialization Sequence Completed}.\\
+              \begin{verbatim}
+Peer Connection Initiated with [AF_INET]172.16.137.222:54286
+Initialization Sequence Completed
+              \end{verbatim}
 		      Auf der ServerVM respektive:\\
-		      \texttt{Peer Connection Initiated with [AF\_INET]172.16.137:1194 \\
-		      	Initialization Sequence Complete}\\
+              \begin{verbatim}
+Peer Connection Initiated with [AF_INET]172.16.137.144:1194
+Initialization Sequence Completed
+              \end{verbatim}
 		\item
 		      Für den Tunnel der VPN wird das Interface tun0 verwendet.\\
 		      Der Webserver der ServerVM lässt sich einfach im Browser über
-		      \textit{10.8.0.1:80} aufrufen.
-		      Der Aufbau einer SSH-Verbindung ist nicht erlaubt, da dies
-		      kein Antwortpacket der VPN ist und somit im Output geblockt
-		      wird.
+		      \textit{10.8.0.1:80} aufrufen.\\
+		      Der Aufbau einer SSH-Verbindung ist möglich, so lange er über das
+              VPN erfolgt. Der Client kann in unserer Konfiguration unter
+              \texttt{10.8.0.2} erreicht werden, also:
+              \begin{usercommands}
+ssh user@10.8.0.2
+              \end{usercommands}
 	\end{enumerate}
 
-	\section*{Aufgabe 6: HTTP-Tunnel}
-	\label{sec:Aufgabe 6: HTTP-Tunnel}
-	\begin{enumerate}[\bfseries 1.]
-		\item Firewall:
-		      \begin{lstlisting}
-  iptables -A FORWARD -i eth1 -o eth0 -p tcp --dport 80 -j ACCEPT
-  iptables -A FORWARD -i eth1 -o eth0 -p udp --dport 53 -j ACCEPT
-		\end{lstlisting}
-		\item Wir überlisten die Firewall einfach, indem wir Packete die bei der
-		      ServerVM auf Port 80 eingehen an Port 22 Weiterleiten:
-		      \begin{lstlisting}
-  iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 22
-		\end{lstlisting}
-		\item Firewall:
-		      \begin{lstlisting}
-  iptables -A INPUT -i eth1 -p tcp --dport 3128 -j ACCEPT
-  iptables -A INPUT -i eth1 -j DROP
-  iptables -A FORWARD -j DROP
-  iptables -A OUTPUT -o eth0 -p udp --dport 53 -j ACCEPT
-  iptables -A OUTPUT -o eth0 -p tcp --dport 80 -j ACCEPT
-  iptables -A OUTPUT -o eth0 -p tcp --dport 443 -j ACCEPT
-  iptables -A OUTPUT -o eth0 -j DROP
-		\end{lstlisting}
-		\item In Firefox müssen wir als HTTP-Proxy nur \textit{192.168.254.2
-			3128} einstellen.
-			\item
-			      Als erstes verbinden wir uns über Netcat mit dem SSH-Server der ServerVM:\\
-			      \texttt{nc -x192.168.254.2:3128 -Xconnect 172.16.134.144 80}\\
-			      Danach konfigurieren wir unseren ssh-Befehl mittels Corkscrew in der
-			      \textit{~/.ssh/config}:\\
-			      \begin{lstlisting}
- Host *
-  ProxyCommand corkscrew 192.168.254.2 3128 %h %p
-			\end{lstlisting}
-			Jetzt können wir einfach einen HTTP-Tunnel via SSH aufbauen:\\
-			\texttt{ssh -p 80 user@172.16.134.144}
-			\item Nachdem wir httptunnel installiert haben, müssen wir nur mit
-			      \texttt{hts -F localhost 80} den Server auf der ServerVM öffnen und
-			      den Client mittels \texttt{htc -P 192.168.254.2:3128 -F 8888
-			      172.16.134.144 80} auf der ClientVM starten. Danach können wir einen
-			      HTTP-Tunnel von der ClientVM zur ServerVM aufbauen:
-			      \texttt{ssh -p 8888 user@localhost}
-		\end{enumerate}
+\section*{Aufgabe 6: HTTP-Tunnel}
+\label{sec:Aufgabe 6: HTTP-Tunnel}
+\begin{enumerate}[\bfseries 1.]
+	\item
+        Firewall:
+        \begin{rootcommands}
+iptables -A FORWARD -i eth1 -o eth0 -p tcp --dport 80 -j ACCEPT
+iptables -A FORWARD -i eth1 -o eth0 -p udp --dport 53 -j ACCEPT
+		\end{rootcommands}
 
-    \begin{appendices}
-      \section{Server-Config}
-      \lstinputlisting[caption=server.conf]{server.conf}
-      \section{Client-Config}
-      \lstinputlisting[caption=client.conf]{client.conf}
-  \end{appendices}
+	\item
+        Es gibt mehrere Wege, die Firewall zu überlisten.\\
+        Ein Weg ist es, Pakete die bei der ServerVM auf Port 80 eingehen,
+        an Port 22 Weiterleiten:
+		\begin{rootcommands}
+iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 22
+		\end{rootcommands}
+
+        Eine andere Möglichkeit ist, sshd auf der ServerVM auf Port 80 lauschen
+        zu lassen, indem man in \texttt{/etc/ssh/sshd\_config} die Definition
+        \texttt{Port 22} durch \texttt{Port 80} ersetzt. Nun muss man sshd neustarten
+        und Apache, was bisher Port 80 belegt, stoppen:
+
+        \begin{rootcommands}
+service apache2 stop
+service sshd restart
+        \end{rootcommands}
+
+	\item
+        Firewall:
+	    \begin{rootcommands}
+iptables -A INPUT -i eth1 -p tcp --dport 3128 -j ACCEPT
+iptables -A INPUT -i eth1 -j DROP
+iptables -A FORWARD -j DROP
+iptables -A OUTPUT -o eth0 -p udp --dport 53 -j ACCEPT
+iptables -A OUTPUT -o eth0 -p tcp --dport 80 -j ACCEPT
+iptables -A OUTPUT -o eth0 -p tcp --dport 443 -j ACCEPT
+iptables -A OUTPUT -o eth0 -j DROP
+	    \end{rootcommands}
+
+	\item
+        In Firefox müssen wir als HTTP-Proxy nur \textit{192.168.254.2:3128}
+        einstellen.
+
+	\item
+        Als erstes verbinden wir uns über Netcat mit dem SSH-Server der ServerVM:
+        \begin{usercommands}
+nc -x192.168.254.2:3128 -Xconnect 172.16.134.144 80
+        \end{usercommands}
+		Danach konfigurieren wir unseren ssh-Befehl mittels Corkscrew in der
+		\textit{~/.ssh/config}:\\
+		\begin{lstlisting}
+Host *
+  ProxyCommand corkscrew 192.168.254.2 3128 %h %p
+		\end{lstlisting}
+		Jetzt können wir einfach einen HTTP-Tunnel via SSH aufbauen:
+        \begin{usercommands}
+ssh -p80 user@172.16.137.144
+        \end{usercommands}
+
+	\item
+        Nachdem wir httptunnel installiert haben, müssen wir nur mit
+		\texttt{hts -F localhost 80} den Server auf der ServerVM öffnen und
+		den Client mittels \texttt{htc -P 192.168.254.2:3128 -F 8888
+		172.16.134.144 80} auf der ClientVM starten. Danach können wir einen
+		HTTP-Tunnel von der ClientVM zur ServerVM aufbauen:
+        \begin{usercommands}
+ssh -p8888 user@localhost
+        \end{usercommands}
+\end{enumerate}
+
+\bigskip
+
+\begin{appendices}
+    \section{Server-Config}
+    \lstinputlisting[caption=server.conf]{server.conf}
+    \section{Client-Config}
+    \lstinputlisting[caption=client.conf]{client.conf}
+\end{appendices}
 \end{document}
