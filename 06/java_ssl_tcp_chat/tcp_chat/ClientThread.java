@@ -7,6 +7,10 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.net.ssl.SSLHandshakeException;
 import javax.net.ssl.SSLSocket;
@@ -31,38 +35,26 @@ class ClientThread extends Thread implements Runnable {
 			PrintWriter out = new PrintWriter(client.getOutputStream(), true);
 			in = new BufferedReader(new InputStreamReader(
 					client.getInputStream()));
-			out.println("Username: ");
-			String username = in.readLine();
-			out.println("Password:");
-			char[] password = new char[20];
-			int i = 0;
-			do {
-				char c = (char) in.read();
-				if (c == '\r' || c == '\n') {
-					break;
+			Certificate[] certs = client.getSession().getPeerCertificates();
+			for (Certificate cert : certs) {
+				X509Certificate xcert = (X509Certificate)cert;
+				String cert_name = xcert.getSubjectDN().getName();
+				System.out.println(cert_name);
+				
+				Pattern name = Pattern.compile("CN=((?:[\\pL\\p{Nd}_]{1,20}\\s*)*),.*");
+				
+				Matcher mname = name.matcher(cert_name);
+				if (mname.matches()) {
+					User=mname.group(1);
 				}
-				password[i] = c;
-				i++;
-			} while (true);
-			if (observer.authenticate(username, password)) {
-				out.println("Authentication succesful");
-				password = null;
-				User = username;
-			} else {
-				out.println("Password or Username invalid.");
-				password = null;
-				observer.disconnect(ID);
-				client.close();
-				client = null;
-				return;
 			}
 		}
 		catch (SSLHandshakeException e) {
-				System.out.println("SSLHandshake failed");
+				System.err.println("SSLHandshake failed");
 				this.interrupt();
 		}
 		 catch (IOException e) {
-			System.out.println("in or out failed");
+			System.err.println("in or out failed");
 			this.interrupt();
 		} 
 
@@ -77,20 +69,19 @@ class ClientThread extends Thread implements Runnable {
 				}
 				observer.notify(line, ID, User);
 			} catch (IOException e) {
-				System.out.println("Read failed");
-				System.exit(-1);
+				System.err.println("Read failed");
+				this.interrupt();
 			}
 		}
 	}
-
+	
 	public synchronized void print(String message) {
 		try {
 			PrintWriter out = null;
 			out = new PrintWriter(client.getOutputStream(), true);
 			out.println(message);
 		} catch (IOException e) {
-			System.out.println("out failed");
-			System.exit(-1);
+			System.err.println("out failed");
 		}
 	}
 

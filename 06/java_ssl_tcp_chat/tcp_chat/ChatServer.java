@@ -16,6 +16,11 @@ import passwd_save_java.Useradmin;
 public class ChatServer {
 
 	public static void main(String[] args) {
+		System.setProperty("javax.net.ssl.trustStore", "/home/patrick/workspace2/project_netsec/src/tcp_chat/servertest.truststore"); 
+		System.setProperty("javax.net.ssl.keyStore", "/home/patrick/workspace2/project_netsec/src/tcp_chat/servertest.keystore"); 
+		System.setProperty("javax.trustStorePassword", "123456");
+		System.setProperty("javax.net.ssl.keyStorePassword", "123456");
+		
 		ChatServer chatserver = new ChatServer();
 		chatserver.listenSocket();
 	}
@@ -27,7 +32,6 @@ public class ChatServer {
 	private Useradmin useradmin;
 	
 	public ChatServer() {
-		
 		this.sslf = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
 		this.connections = new LinkedList<ClientThread>();
 		this.useradmin = new Useradmin();
@@ -51,7 +55,6 @@ public class ChatServer {
 				connections.add(t);
 			} catch (IOException e) {
 				System.out.println("Accept failed: 4444");
-				System.exit(-1);
 			}
 		}
 	}
