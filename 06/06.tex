@@ -51,6 +51,42 @@
 \maketitle
 \section{Absicherung des TCP-Chats mit SSL}
 \label{sec:tcp_chat}
+Um unseren ursprünglichen TCP-Chat mit SSL zu sichern, bedienen wir uns des \textit{javax.net.ssl}
+Packetes. Dieses beinhaltet SSLSockets und SSLServerSockets, die wir benutzen um, eine sichere
+Verbindung aufzubauen. Die Sockets werden mittels SSLSocketFactory erstellt.
+Alle SSLSockets greifen können auf einen \textit{keyStore} und einen \textit{trustStore} zugreifen.
+Diese Java-spezifischen Datenbanken beinhalten Zertifikate und private Schlüssel für den Aufbau der
+SSL-Verbindung. Der \textit{keyStore}  beinhaltet einen privaten Schlüssel und die Zertifikate, die
+beim SSL-Handshake mitgeschickt werden. Im \textit{trustStore} sind, dann die Zertifikate gespeichert,
+denen vertraut wird (trusted Certificate). Den \textit{keyStore} des Clienten, haben wir
+mit \textit{keytool} wie folgt initiiert:\\
+\texttt{keytool -keystore clienttest.keystore -keyalg RSA -genkey -alias client.}\\
+Dieser Befehl erzeugt ein neues Schlüsselpaar mittels RSA, sowie ein Zertifikat mit dem Alias
+"client". Beim Erzeugen des Zertifikats fragt uns \textit{keytool} nach den üblichen Parametern,
+wie z.B. Name, Länderkürzel, Organisation, etc. . Für unsere Anwendung ist nur wichtig, dass
+der Client einen Namen in sein Zertifikat einträgt. Für den Server erstellen wir respektive
+einen \textit{keyStore}:\\
+\texttt{keytool -keystore servertest.keystore -keyalg RSA -genkey -alias server.}\\
+Beim SSlHandshake werden die Zertifikate aus den Keystores dem Verbindungspartner präsentiert.
+Also präsentiert z.B. der Client sein selbstsigniertes Zertifikat aus \textit{clienttest.keystore}
+dem Server. Der Server präsentiert wiederum sein Zertifikat dem Client.
+Die präsentierten Zertifikate werden dann gegen die Zertifikate im \textit{trustStore}
+abgeglichen. Also müsssen wir die Zertifikate jeweils in die \textit{trustStores} des
+Verbindungspartners importieren:
+\begin{usercommands}
+  keytool -importkeystore -srckeystore servertest.keystore -destkeystore clienttest.truststore
+  keytool -importkeystore -srckeystore clienttest.keystore -destkeystore servertest.truststore
+\end{usercommands}
+Jetzt akzeptieren Server und Client die präsentierten Zertifikate und eine sichere SSLVerbidung
+wird aufgebaut.\\\\
+Nun wollten wir unsere Nutzername-Password-Authentifikation durch die Zertifikatsauthentifikation
+der SSL-Verbindung ersetzen. Wie zuvor erwähnt, muss jedes Clienten-Zertifikat mindestens einen
+Namen enthalten. So können wir ein vertrautes Zertifikat genau einem Nutzer zuordnen.
+Der Anzeige-Name im Chat ist dann dem Namen im Zertifikat identisch.\\\\
+Bei der vorherigen Implementation unseres Chats konnte man sich einfach mittels \textit{netcat}
+verbinden. Deshalb war kein Java-Client von Nöten. Da \textit{netcat} aber kein SSL-Protokol
+unterstützt, benötigt man zur Kommunikation nun einen Java-Chat-Clienten. Für die Implementation
+siehe \ref{sec:TCP-Chat}.
 
 \section{CAs und Webserver-Zertifikate}
 \label{sec:certs}
@@ -145,5 +181,10 @@ Strict-Transport-Security: max-age=15768000
 \label{sec:crypto}
 
 \begin{appendices}
+  \section{TCP-Chat}
+  \label{sec:TCP-Chat}
+  \lstinputlisting[caption=ChatServer.java,language=java]{java_ssl_tcp_chat/tcp_chat/ChatServer.java}
+  \lstinputlisting[caption=ChatClient.java,language=java]{java_ssl_tcp_chat/tcp_chat/ChatClient.java}
+  \lstinputlisting[caption=ClientThread.java,language=java]{java_ssl_tcp_chat/tcp_chat/ClientThread.java}
 \end{appendices}
 \end{document}
