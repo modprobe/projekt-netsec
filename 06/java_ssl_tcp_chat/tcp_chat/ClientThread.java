@@ -1,4 +1,6 @@
-//SourceCode partially from: http://www.dreamincode.net/forums/topic/259777-a-simple-chat-program-with-clientserver-gui-optional/
+//SourceCode partially from:
+//http://www.dreamincode.net/forums/topic/259777-a-
+//			simple-chat-program-with-clientserver-gui-optional/
 //							 http://www.oracle.com/technetwork/java/socket-140484.html
 
 package tcp_chat;
@@ -40,9 +42,9 @@ class ClientThread extends Thread implements Runnable {
 				X509Certificate xcert = (X509Certificate)cert;
 				String cert_name = xcert.getSubjectDN().getName();
 				System.out.println(cert_name);
-				
+
 				Pattern name = Pattern.compile("CN=((?:[\\pL\\p{Nd}_]{1,20}\\s*)*),.*");
-				
+
 				Matcher mname = name.matcher(cert_name);
 				if (mname.matches()) {
 					User=mname.group(1);
@@ -56,7 +58,7 @@ class ClientThread extends Thread implements Runnable {
 		 catch (IOException e) {
 			System.err.println("in or out failed");
 			this.interrupt();
-		} 
+		}
 
 		while (!this.interrupted()) {
 			try {
@@ -74,7 +76,7 @@ class ClientThread extends Thread implements Runnable {
 			}
 		}
 	}
-	
+
 	public synchronized void print(String message) {
 		try {
 			PrintWriter out = null;

@@ -1,5 +1,6 @@
 //SourceCode partially from:
-//	http://www.dreamincode.net/forums/topic/259777-a-simple-chat-program-with-clientserver-gui-optional/
+//	http://www.dreamincode.net/forums/topic/259777-a-simple-chat-program-with-
+//				clientserver-gui-optional/
 //  http://www.oracle.com/technetwork/java/socket-140484.html
 //  http://www.java2s.com/Tutorial/Java/0490__Security/SSLServerSession.htm
 package tcp_chat;

@@ -222,7 +222,8 @@ Strict-Transport-Security: max-age=15768000
 
         Durch diese Methode lässt sich der Schlüssel nicht mehr einfach aus dem Ciphertext
         ablesen. PKCS7 unterstützt jedoch nur Blöcke bis zu 256-Byte und 256 mögliche Paddingbytes
-        lassen sich in kurzer Zeit per Bruteforce durchprobieren. Unser Skript (\ref{sec:Decrypt})
+        lassen sich in kurzer Zeit per Bruteforce durchprobieren
+        \footnote{Quelle: \url{https://en.wikipedia.org/wiki/Padding_(cryptography)}}. Unser Skript (\ref{sec:Decrypt})
         probiert einfach nur alle Paddingbytes von 0 bis 100 durch (100 da die Dateien nur 100 Byte
         groß sind) und versucht die Nachricht zu entschlüsseln. Dann suchen wir einfach die
         Entschlüsselung aus, die korrekt ist. Mithilfe dieses Skripts haben wir folgende Nachrichten
@@ -237,7 +238,19 @@ Strict-Transport-Security: max-age=15768000
 \section{EasyAES}
 \label{sec:EasyAES}
 
-
+  Ein Meet-In-The-Middle-Angriff nutzt die Tatsache aus, dass wir sowohl Ciphertext als auch Plaintext besitzen
+  \footnote{Quelle: \url{http://www.crypto-it.net/eng/attacks/meet_in_the_middle.html}}.
+  Wir betreiben einen \textit{Time-Space-Tradeoff} indem wir zuerst alle möglichen Schlüssel  K1 erzeugen, dann
+  den Plaintext mit jedem dieser Schlüssel verschlüsseln und diese Schlüssel-Cipher-Paare in einer Art
+  Lookup-Table aufbewahren. Dann erzeugen wir Schlüssel K2 mit denen wir versuchen den Ciphertext zu dechiffrieren.
+  Wenn wir jetzt den dechifrierten Ciphertext in unserer Lookup-Table finden, haben wir ein Schlüsselpaar K1,K2
+  gefunden, mit dem der Plaintext verschlüsselt wurde. Dadurch, dass wir die Lookup-Table besitzen, benötigen
+  wir weniger Berechnungszeit im Austausch für einen höheren Speicherverbrauch.
+  Mit Hilfe unseres Skripts(siehe \ref{sec:EasyAES}) haben wir folgende Schlüssel ermittelt:
+  \begin{itemize}
+    \item[] Key1: 00:00:00:f5:00:00:00:00:00:00:63:00:00:00:00:00
+    \item[] Key2: 00:00:00:00:77:00:00:00:b0:00:00:00:00:00:00:00
+  \end{itemize}
 
 \begin{appendices}
     \section{TCP-Chat}
@@ -250,5 +263,9 @@ Strict-Transport-Security: max-age=15768000
     \label{sec:Decrypt}
     \lstinputlisting[caption=bazi\_decrypt.py,language=python]{bazi_decrypt.py}
     \lstinputlisting[caption=advazi\_decrypt.py,language=python]{advazi_decrypt.py}
+
+    \section{EasyAES}
+    \label{sec:EasyAES}
+    \lstinputlisting[caption=easyAES\_mitm.py,language=python]{easyAES_mitm.py}
 \end{appendices}
 \end{document}

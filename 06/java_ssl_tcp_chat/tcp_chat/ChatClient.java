@@ -1,5 +1,7 @@
 /*
-	SourceCode partially from: https://stackoverflow.com/questions/7872846/how-to-read-from-standard-input-non-blocking
+	SourceCode partially from:
+	https://stackoverflow.com/questions/7872846/how-to-read-from-standard-input-
+				non-blocking
 */
 package tcp_chat;
 
@@ -18,21 +20,21 @@ public class ChatClient {
 
 	private static final BlockingQueue<String>  socketlines = new LinkedBlockingQueue<String>();
 	private static final BlockingQueue<String>  systemlines = new LinkedBlockingQueue<String>();
-	
+
   public static void main(String[] args) throws Exception {
 	 BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
-	 System.setProperty("javax.net.ssl.trustStore", "/home/patrick/workspace2/project_netsec/src/tcp_chat/clienttest.truststore"); 
-	 System.setProperty("javax.net.ssl.keyStore", "/home/patrick/workspace2/project_netsec/src/tcp_chat/clienttest.keystore"); 
+	 System.setProperty("javax.net.ssl.trustStore", "/home/patrick/workspace2/project_netsec/src/tcp_chat/clienttest.truststore");
+	 System.setProperty("javax.net.ssl.keyStore", "/home/patrick/workspace2/project_netsec/src/tcp_chat/clienttest.keystore");
 	 System.setProperty("javax.trustStorePassword", "123456");
 	 System.setProperty("javax.net.ssl.keyStorePassword", "123456");
-	 
+
     SocketFactory sf = SSLSocketFactory.getDefault();
     SSLSocket s = (SSLSocket) sf.createSocket("localhost", 4444);
-        
+
     BufferedReader sin = new BufferedReader(new InputStreamReader(s.getInputStream()));
     PrintWriter sout = new PrintWriter(s.getOutputStream(),true);
-    
-    Thread socketReaderThread = null; 
+
+    Thread socketReaderThread = null;
     socketReaderThread = new Thread(new Runnable() {
     	@Override
     		public void run() {
@@ -48,8 +50,8 @@ public class ChatClient {
     });
     socketReaderThread.setDaemon(true);
     socketReaderThread.start();
-    
-    Thread systemReaderThread = null; 
+
+    Thread systemReaderThread = null;
     systemReaderThread = new Thread(new Runnable() {
     	@Override
     		public void run() {
@@ -65,7 +67,7 @@ public class ChatClient {
     });
     systemReaderThread.setDaemon(true);
     systemReaderThread.start();
-    
+
     String line;
     while (!s.isClosed()) {
     	if ((line = socketlines.poll(10L, TimeUnit.MILLISECONDS))!= null){
