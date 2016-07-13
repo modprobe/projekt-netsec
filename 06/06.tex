@@ -9,37 +9,39 @@
 \usepackage[left=2cm,right=2cm,top=2cm,bottom=3cm]{geometry}
 \usepackage{graphicx}
 \usepackage[hidelinks]{hyperref}
+\usepackage{setspace}
 
 \newcommand*{\Comment}[1]{\hfill\makebox[8.0cm][l]{#1}}%
 \lstdefinestyle{BashInputStyle}{
-  language=bash,
-  basicstyle=\small\sffamily,
-  numbers=left,
-  numberstyle=\tiny,
-  numbersep=6pt,
-  frame=tb,
-  columns=fullflexible,
-  backgroundcolor=\color{yellow!20},
-  linewidth=\linewidth,
-  xleftmargin=5mm,
-  framexleftmargin=5mm,
-  escapechar=\&% char to escape out of listings and back to LaTeX
+    language=bash,
+    basicstyle=\small\sffamily,
+    numbers=left,
+    numberstyle=\tiny,
+    numbersep=6pt,
+    frame=tb,
+    columns=fullflexible,
+    backgroundcolor=\color{yellow!20},
+    linewidth=\linewidth,
+    xleftmargin=5mm,
+    framexleftmargin=5mm,
+    escapechar=\&% char to escape out of listings and back to LaTeX
 }
 \lstset{style=BashInputStyle}
 
 \lstnewenvironment{rootcommands}[1][]{%
-  \renewcommand{\thelstnumber}{\#}
-  \lstset{style=BashInputStyle,#1}%
+    \renewcommand{\thelstnumber}{\#}
+    \lstset{style=BashInputStyle,#1}%
 }{%
 }
 
 \lstnewenvironment{usercommands}[1][]{%
-  \renewcommand{\thelstnumber}{\$}
-  \lstset{style=BashInputStyle,#1}%
+    \renewcommand{\thelstnumber}{\$}
+    \lstset{style=BashInputStyle,#1}%
 }{%
 }
 
-\renewcommand*{\thesection}{Aufgabe~\arabic{section}:}
+\renewcommand{\thesection}{Aufgabe~\arabic{section}}
+\setlength\parindent{0pt}
 
 \author{Patrick Eickhoff, Alexander Timmermann}
 \title{Labreport \#6}
@@ -49,44 +51,64 @@
 
 \begin{document}
 \maketitle
+
+\onehalfspace
+
 \section{Absicherung des TCP-Chats mit SSL}
 \label{sec:tcp_chat}
+
 Um unseren ursprünglichen TCP-Chat mit SSL zu sichern, bedienen wir uns des \textit{javax.net.ssl}
-Packetes. Dieses beinhaltet SSLSockets und SSLServerSockets, die wir benutzen um, eine sichere
-Verbindung aufzubauen. Die Sockets werden mittels SSLSocketFactory erstellt.
+Packetes. Dieses beinhaltet \texttt{SSLSockets} und \texttt{SSLServerSockets}, die wir benutzen um, eine sichere
+Verbindung aufzubauen. Die Sockets werden mittels \texttt{SSLSocketFactory} erstellt.
 Alle SSLSockets greifen können auf einen \textit{keyStore} und einen \textit{trustStore} zugreifen.
 Diese Java-spezifischen Datenbanken beinhalten Zertifikate und private Schlüssel für den Aufbau der
 SSL-Verbindung. Der \textit{keyStore}  beinhaltet einen privaten Schlüssel und die Zertifikate, die
 beim SSL-Handshake mitgeschickt werden. Im \textit{trustStore} sind, dann die Zertifikate gespeichert,
 denen vertraut wird (trusted Certificate). Den \textit{keyStore} des Clienten, haben wir
-mit \textit{keytool} wie folgt initiiert:\\
-\texttt{keytool -keystore clienttest.keystore -keyalg RSA -genkey -alias client.}\\
+mit \textit{keytool} wie folgt initiiert:
+
+\begin{usercommands}
+keytool -keystore clienttest.keystore -keyalg RSA -genkey -alias client
+\end{usercommands}
+
 Dieser Befehl erzeugt ein neues Schlüsselpaar mittels RSA, sowie ein Zertifikat mit dem Alias
-"client". Beim Erzeugen des Zertifikats fragt uns \textit{keytool} nach den üblichen Parametern,
-wie z.B. Name, Länderkürzel, Organisation, etc. . Für unsere Anwendung ist nur wichtig, dass
+``client''. Beim Erzeugen des Zertifikats fragt uns \textit{keytool} nach den üblichen Parametern,
+wie z.B. Name, Länderkürzel, Organisation, etc. Für unsere Anwendung ist nur wichtig, dass
 der Client einen Namen in sein Zertifikat einträgt. Für den Server erstellen wir respektive
-einen \textit{keyStore}:\\
-\texttt{keytool -keystore servertest.keystore -keyalg RSA -genkey -alias server.}\\
-Beim SSlHandshake werden die Zertifikate aus den Keystores dem Verbindungspartner präsentiert.
+einen \textit{keyStore}:
+
+\begin{usercommands}
+keytool -keystore servertest.keystore -keyalg RSA -genkey -alias server
+\end{usercommands}
+
+Beim SSL-Handshake werden die Zertifikate aus den Keystores dem Verbindungspartner präsentiert.
 Also präsentiert z.B. der Client sein selbstsigniertes Zertifikat aus \textit{clienttest.keystore}
 dem Server. Der Server präsentiert wiederum sein Zertifikat dem Client.
 Die präsentierten Zertifikate werden dann gegen die Zertifikate im \textit{trustStore}
 abgeglichen. Also müsssen wir die Zertifikate jeweils in die \textit{trustStores} des
 Verbindungspartners importieren:
+
 \begin{usercommands}
-  keytool -importkeystore -srckeystore servertest.keystore -destkeystore clienttest.truststore
-  keytool -importkeystore -srckeystore clienttest.keystore -destkeystore servertest.truststore
+keytool -importkeystore -srckeystore servertest.keystore -destkeystore clienttest.truststore
+keytool -importkeystore -srckeystore clienttest.keystore -destkeystore servertest.truststore
 \end{usercommands}
-Jetzt akzeptieren Server und Client die präsentierten Zertifikate und eine sichere SSLVerbidung
-wird aufgebaut.\\\\
+
+Jetzt akzeptieren Server und Client die präsentierten Zertifikate und eine sichere
+SSL-Verbindung wird aufgebaut.
+
+\medskip
+
 Nun wollten wir unsere Nutzername-Password-Authentifikation durch die Zertifikatsauthentifikation
 der SSL-Verbindung ersetzen. Wie zuvor erwähnt, muss jedes Clienten-Zertifikat mindestens einen
 Namen enthalten. So können wir ein vertrautes Zertifikat genau einem Nutzer zuordnen.
-Der Anzeige-Name im Chat ist dann dem Namen im Zertifikat identisch.\\\\
+Der Anzeige-Name im Chat ist dann dem Namen im Zertifikat identisch.
+
+\medskip
+
 Bei der vorherigen Implementation unseres Chats konnte man sich einfach mittels \textit{netcat}
 verbinden. Deshalb war kein Java-Client von Nöten. Da \textit{netcat} aber kein SSL-Protokol
 unterstützt, benötigt man zur Kommunikation nun einen Java-Chat-Clienten. Für die Implementation
-siehe \ref{sec:TCP-Chat}.
+siehe Anhang \ref{sec:TCP-Chat}.
 
 \section{CAs und Webserver-Zertifikate}
 \label{sec:certs}
@@ -181,33 +203,35 @@ Strict-Transport-Security: max-age=15768000
 \label{sec:crypto}
 
 \begin{enumerate}
-  \item[\bfseries 1.]
-      Das Problem mit der BaziCrypt-Verschlüsselung ist, das die Paddingbytes (\\x00)
-      durch die XOR-Operation den Schlüssel direkt in den Ciphertext abbilden. Durch einfache
-      Analyse der sich wiederholenden Bytes am Ende des Ciphertextes und ein paar Versuchen
-      lässt sich sehr leicht der Schlüssel rekonstruieren. Mithilfe unseres Skripts \ref{sec:Decrypt}
-      haben wir folgende Nachrichten entschlüsselt:
-      \begin{itemize}
-        \item[] \textbf{n01.txt.enc:}\\ Hallo Peter. Endlich koennen wir geheim kommunizieren! Bis bald, Max
-        \item[] \textbf{n02.txt.enc:}\\ Hi Max! Super, Sicherheitsbewusstsein ist ja extrem wichtig! Schoene Gruesse, Peter.
-        \item[] \textbf{n03.txt.enc:}\\ Hi Peter, hast du einen Geheimtipp fuer ein gutes Buch fuer mich? Gruss, Max
-      \end{itemize}
-  \item[\bfseries 2/3.]
-      Das PKCS7-Padding-Verfahren füllt die zu verschlüsselnde Nachricht nicht mehr mti
-      Nullbytes (0x00) sondern mit Bytes die equivalent zur Länge des Paddings sind.\\
-      Beispiel: Padding der Länge 6: 0x06 0x06 0x06 0x06 0x06 0x06.\\
-      Durch diese Methode lässt sich der Schlüssel nicht mehr einfach aus dem Ciphertext
-      ablesen. PKCS7 unterstützt jedoch nur Blöcke bis zu 256-Byte und 256 mögliche Paddingbytes
-      lassen sich in kurzer Zeit per Bruteforce durchprobieren. Unser Skript (\ref{sec:Decrypt})
-      probiert einfach nur alle Paddingbytes von 0 bis 100 durch (100 da die Dateien nur 100 Byte
-      groß sind) und versucht die Nachricht zu entschlüsseln. Dann suchen wir einfach die
-      Entschlüsselung aus, die korrekt ist. Mithilfe dieses Skripts haben wir folgende Nachrichten
-      entschlüsselt:
-      \begin{itemize}
-        \item [] \textbf{n04.txt.enc}\\Hi Max, natuerlich: Kryptologie von A. Beutelspacher ist super. Gruss Peter
-        \item [] \textbf{n05.txt.enc}\\Hi Peter, worum geht es in dem Buch? Ciao, Max.
-        \item [] \textbf{n06.txt.enc}\\Hi Max, das ist ein super Buch, das viele Krypto-Themen abdeckt. Gruss Peter
-      \end{itemize}
+    \item[\bfseries 1.]
+        Das Problem mit der BaziCrypt-Verschlüsselung ist, das die Paddingbytes (\texttt{0x00})
+        durch die XOR-Operation den Schlüssel direkt in den Ciphertext abbilden. Durch einfache
+        Analyse der sich wiederholenden Bytes am Ende des Ciphertextes und ein paar Versuchen
+        lässt sich sehr leicht der Schlüssel rekonstruieren. Mithilfe unseres Skripts \ref{sec:Decrypt}
+        haben wir folgende Nachrichten entschlüsselt:
+        \begin{description}
+            \item[n01.txt.enc] Hallo Peter. Endlich koennen wir geheim kommunizieren! Bis bald, Max
+            \item[n02.txt.enc] Hi Max! Super, Sicherheitsbewusstsein ist ja extrem wichtig! Schoene Gruesse, Peter.
+            \item[n03.txt.enc] Hi Peter, hast du einen Geheimtipp fuer ein gutes Buch fuer mich? Gruss, Max
+        \end{description}
+    \item[\bfseries 2/3.]
+        Das PKCS7-Padding-Verfahren füllt die zu verschlüsselnde Nachricht nicht mehr mti
+        Nullbytes, sondern mit Bytes die äquivalent zur Länge des Paddings sind.
+
+        \textbf{Beispiel:} Padding der Länge 6: \texttt{0x06 0x06 0x06 0x06 0x06 0x06}
+
+        Durch diese Methode lässt sich der Schlüssel nicht mehr einfach aus dem Ciphertext
+        ablesen. PKCS7 unterstützt jedoch nur Blöcke bis zu 256-Byte und 256 mögliche Paddingbytes
+        lassen sich in kurzer Zeit per Bruteforce durchprobieren. Unser Skript (\ref{sec:Decrypt})
+        probiert einfach nur alle Paddingbytes von 0 bis 100 durch (100 da die Dateien nur 100 Byte
+        groß sind) und versucht die Nachricht zu entschlüsseln. Dann suchen wir einfach die
+        Entschlüsselung aus, die korrekt ist. Mithilfe dieses Skripts haben wir folgende Nachrichten
+        entschlüsselt:
+        \begin{description}
+            \item[n04.txt.enc] Hi Max, natuerlich: Kryptologie von A. Beutelspacher ist super. Gruss Peter
+            \item[n05.txt.enc] Hi Peter, worum geht es in dem Buch? Ciao, Max.
+            \item[n06.txt.enc] Hi Max, das ist ein super Buch, das viele Krypto-Themen abdeckt. Gruss Peter
+        \end{description}
 \end{enumerate}
 
 \section{EasyAES}
@@ -216,16 +240,15 @@ Strict-Transport-Security: max-age=15768000
 
 
 \begin{appendices}
-  \section{TCP-Chat}
-  \label{sec:TCP-Chat}
-  \lstinputlisting[caption=ChatServer.java,language=java]{java_ssl_tcp_chat/tcp_chat/ChatServer.java}
-  \lstinputlisting[caption=ChatClient.java,language=java]{java_ssl_tcp_chat/tcp_chat/ChatClient.java}
-  \lstinputlisting[caption=ClientThread.java,language=java]{java_ssl_tcp_chat/tcp_chat/ClientThread.java}
+    \section{TCP-Chat}
+    \label{sec:TCP-Chat}
+    \lstinputlisting[caption=ChatServer.java,language=java]{java_ssl_tcp_chat/tcp_chat/ChatServer.java}
+    \lstinputlisting[caption=ChatClient.java,language=java]{java_ssl_tcp_chat/tcp_chat/ChatClient.java}
+    \lstinputlisting[caption=ClientThread.java,language=java]{java_ssl_tcp_chat/tcp_chat/ClientThread.java}
 
-  \section{Decrypt}
-  \label{sec:Decrypt}
-  \lstinputlisting[caption=bazi\_decrypt.py,language=python]{bazi_decrypt.py}
-  \lstinputlisting[caption=advazi\_decrypt.py,language=python]{advazi_decrypt.py}
-
+    \section{Decrypt}
+    \label{sec:Decrypt}
+    \lstinputlisting[caption=bazi\_decrypt.py,language=python]{bazi_decrypt.py}
+    \lstinputlisting[caption=advazi\_decrypt.py,language=python]{advazi_decrypt.py}
 \end{appendices}
 \end{document}

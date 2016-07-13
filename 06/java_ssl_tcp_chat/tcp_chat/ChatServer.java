@@ -1,6 +1,7 @@
-//SourceCode partially from: http://www.dreamincode.net/forums/topic/259777-a-simple-chat-program-with-clientserver-gui-optional/
-//							 http://www.oracle.com/technetwork/java/socket-140484.html
-// 							 http://www.java2s.com/Tutorial/Java/0490__Security/SSLServerSession.htm
+//SourceCode partially from:
+//	http://www.dreamincode.net/forums/topic/259777-a-simple-chat-program-with-clientserver-gui-optional/
+//  http://www.oracle.com/technetwork/java/socket-140484.html
+//  http://www.java2s.com/Tutorial/Java/0490__Security/SSLServerSession.htm
 package tcp_chat;
 
 import java.io.IOException;
@@ -16,26 +17,26 @@ import passwd_save_java.Useradmin;
 public class ChatServer {
 
 	public static void main(String[] args) {
-		System.setProperty("javax.net.ssl.trustStore", "/home/patrick/workspace2/project_netsec/src/tcp_chat/servertest.truststore"); 
-		System.setProperty("javax.net.ssl.keyStore", "/home/patrick/workspace2/project_netsec/src/tcp_chat/servertest.keystore"); 
+		System.setProperty("javax.net.ssl.trustStore", "/home/patrick/workspace2/project_netsec/src/tcp_chat/servertest.truststore");
+		System.setProperty("javax.net.ssl.keyStore", "/home/patrick/workspace2/project_netsec/src/tcp_chat/servertest.keystore");
 		System.setProperty("javax.trustStorePassword", "123456");
 		System.setProperty("javax.net.ssl.keyStorePassword", "123456");
-		
+
 		ChatServer chatserver = new ChatServer();
 		chatserver.listenSocket();
 	}
-	
+
 	private SSLServerSocketFactory sslf;
 	private SSLServerSocket server;
 	private List<ClientThread> connections;
 	private List<String> loggedInUsers;
 	private Useradmin useradmin;
-	
+
 	public ChatServer() {
 		this.sslf = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
 		this.connections = new LinkedList<ClientThread>();
 		this.useradmin = new Useradmin();
-		this.loggedInUsers = new LinkedList<String>();		
+		this.loggedInUsers = new LinkedList<String>();
 	}
 
 	public void listenSocket() {
@@ -67,7 +68,7 @@ public class ChatServer {
 			System.exit(-1);
 		}
 	}
-	
+
 	public void notify(String message, int ID, String User) {
 		for (ClientThread t : connections) {
 			if (t.ID != ID) {
@@ -75,7 +76,7 @@ public class ChatServer {
 			}
 		}
 	}
-	
+
 	public void disconnect(int ID) {
 		for (ClientThread t : connections) {
 			if (t.ID == ID) {
@@ -85,7 +86,7 @@ public class ChatServer {
 			}
 		}
 	}
-	
+
 	public boolean authenticate(String username, char[] password) {
 		if (loggedInUsers.contains(username)) {
 			return false;
