@@ -24,7 +24,7 @@
     linewidth=\linewidth,
     xleftmargin=5mm,
     framexleftmargin=5mm,
-    escapechar=\&% char to escape out of listings and back to LaTeX
+    % escapechar=\&% char to escape out of listings and back to LaTeX
 }
 \lstset{style=BashInputStyle}
 
@@ -238,19 +238,60 @@ Strict-Transport-Security: max-age=15768000
 \section{EasyAES}
 \label{sec:EasyAES}
 
-  Ein Meet-In-The-Middle-Angriff nutzt die Tatsache aus, dass wir sowohl Ciphertext als auch Plaintext besitzen
-  \footnote{Quelle: \url{http://www.crypto-it.net/eng/attacks/meet_in_the_middle.html}}.
-  Wir betreiben einen \textit{Time-Space-Tradeoff} indem wir zuerst alle möglichen Schlüssel  K1 erzeugen, dann
-  den Plaintext mit jedem dieser Schlüssel verschlüsseln und diese Schlüssel-Cipher-Paare in einer Art
-  Lookup-Table aufbewahren. Dann erzeugen wir Schlüssel K2 mit denen wir versuchen den Ciphertext zu dechiffrieren.
-  Wenn wir jetzt den dechifrierten Ciphertext in unserer Lookup-Table finden, haben wir ein Schlüsselpaar K1,K2
-  gefunden, mit dem der Plaintext verschlüsselt wurde. Dadurch, dass wir die Lookup-Table besitzen, benötigen
-  wir weniger Berechnungszeit im Austausch für einen höheren Speicherverbrauch.
-  Mit Hilfe unseres Skripts(siehe \ref{sec:EasyAES}) haben wir folgende Schlüssel ermittelt:
-  \begin{itemize}
-    \item[] Key1: 00:00:00:f5:00:00:00:00:00:00:63:00:00:00:00:00
-    \item[] Key2: 00:00:00:00:77:00:00:00:b0:00:00:00:00:00:00:00
-  \end{itemize}
+Ein Meet-In-The-Middle-Angriff nutzt die Tatsache aus, dass wir sowohl Ciphertext als auch Plaintext besitzen%
+\footnote{Quelle: \url{http://www.crypto-it.net/eng/attacks/meet_in_the_middle.html}}.
+Wir betreiben einen \textit{Time-Space-Tradeoff} indem wir zuerst alle möglichen Schlüssel  K1 erzeugen, dann
+den Plaintext mit jedem dieser Schlüssel verschlüsseln und diese Schlüssel-Cipher-Paare in einer Art
+Lookup-Table aufbewahren. Dann erzeugen wir Schlüssel K2 mit denen wir versuchen den Ciphertext zu dechiffrieren.
+Wenn wir jetzt den dechifrierten Ciphertext in unserer Lookup-Table finden, haben wir ein Schlüsselpaar K1,K2
+gefunden, mit dem der Plaintext verschlüsselt wurde. Dadurch, dass wir die Lookup-Table besitzen, benötigen
+wir weniger Berechnungszeit im Austausch für einen höheren Speicherverbrauch.
+Mit Hilfe unseres Skripts (siehe Appendix \ref{sec:EasyAES}) haben wir folgende Schlüssel ermittelt:
+
+\begin{description}
+    \item[Key 1:] \texttt{00:00:00:f5:00:00:00:00:00:00:63:00:00:00:00:00}
+    \item[Key 2:] \texttt{00:00:00:00:77:00:00:00:b0:00:00:00:00:00:00:00}
+\end{description}
+
+\section{Bonus: Timing-Attacke}
+\label{sec:timing}
+
+\begin{tabular}{l p{.85\textwidth}}
+    \textbf{Disclaimer:} & %
+        Aufgrund der erhöhten Schwierigkeit im Vergleich zu den anderen Aufgaben,
+        haben wir eng mit Gruppe 12 zusammengearbeitet. Diese Aufgabe ist
+        daher deckungsgleich.
+\end{tabular}\\
+
+Unsere Timing-Attack ist im Anhang zu finden. Wir würden gerne an dieser Stelle einige Erkenntnisse auflisten.
+Zunächst haben wir die Object-File disassemblet. Dies ist sehr einfach mit \texttt{\$ objdump -d password\_compare.o},
+oder etwas komplizierter, aber im Ergebnis übersichtlicher mit \textit{radare2}.
+
+\medskip
+
+Der Assembly können wir entnehmen, dass die Funktion keinen Boolean returnt, sondern einen Int. Obwohl auf dem
+Aufgabenblatt nicht eindeutig dargestellt war, welchen Returnwert die Funktion hat, wurde durch die gezeigte
+Java-Funktion Boolean impliziert. Bei einem korrekten Passwort wird $0$ zurückgegeben, andernfalls $-1$.
+Dies ist ein wichtiges Detail, denn in C gelten alle Integer \textit{ungleich} $0$ als wahr, und nur $0$ als falsch.
+Hat man also nur den Wiedergabe-Wert der Funktion z.B. in einer \texttt{if}-Klausel stehen, wird man sich wundern.
+Demnach ist die Aussage über \textit{POSIX}-Erfüllung ebenfalls diskutabel.
+
+\medskip
+
+Weiterhin ist der Assembly zu entnehmen, dass die Länge des Passworts gar nicht überprüft wird. Dafür gibt es gar nicht genügend
+Loops. Dies macht uns den Angriff recht einfach; wir nehmen einfach einen langen String, und justieren an einer Stelle
+die Zeichen so lange, bis wir eine eindeutige Spike in der Zeit sehen, und akzeptieren diesen Buchstaben dann als richtig.
+Sobald die Funktion $0$ widergibt, sind wir durch.
+
+\medskip
+
+Das Passwort lautet: \texttt{Licht-B()6eN}. Das Password lautet ebenfalls: \texttt{Licht-B()6eN1234lalalala};
+tatsächlich wird jeder String, der mit \texttt{Licht-B()6eN} \textit{beginnt}, und beliebig weitergeht, von der Funktion akzeptiert.
+
+\medskip
+
+Unser Code ist in Appendix \ref{sec:timing_code} zu finden. Zu beachten ist auch dass dem Compiler \texttt{-O0} übergeben wird,
+damit er nicht optimiert und somit die Zeiten verfälscht.
 
 \begin{appendices}
     \section{TCP-Chat}
@@ -267,5 +308,10 @@ Strict-Transport-Security: max-age=15768000
     \section{EasyAES}
     \label{sec:EasyAES}
     \lstinputlisting[caption=easyAES\_mitm.py,language=python]{easyAES_mitm.py}
+
+    \section{Timing-Attack}
+    \label{sec:timing_code}
+    \lstinputlisting[caption=timing.h,language=C]{timing/timing.h}
+    \lstinputlisting[caption=timing.c,language=C]{timing/timing.c}
 \end{appendices}
 \end{document}
